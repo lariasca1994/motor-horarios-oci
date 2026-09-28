@@ -61,6 +61,9 @@ def health_db():
             cur.execute("SELECT 1 AS ok")
             cur.fetchone()
         return {"status": "ok"}
+    except KeyError as e:
+        # Solo el nombre de la variable, nunca su valor
+        raise HTTPException(status_code=503, detail=f"BD no disponible: falta la variable de entorno {e.args[0]}")
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"BD no disponible: {type(e).__name__}")
 
