@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambiar contraseña — Motor de Horarios</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/tema.js"></script>
+</head>
+<body>
+    <header class="barra">
+        <span class="marca-grupo">
+            <a class="marca" href="index.html">Motor de Horarios</a>
+            <button type="button" id="alternar-tema" class="boton-tema"
+                    aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">🌓</button>
+        </span>
+        <nav class="nav-principal" id="nav"></nav>
+    </header>
+    <main>
+        <section class="tarjeta-formulario">
+            <h1>Cambiar contraseña</h1>
+            <p class="aviso" id="aviso" hidden></p>
+            <form id="form-clave">
+                <label for="actual">Contraseña actual</label>
+                <input type="password" id="actual" name="actual" autocomplete="current-password" required>
+
+                <label for="nueva">Nueva contraseña (mínimo 10 caracteres)</label>
+                <input type="password" id="nueva" name="nueva" minlength="10" maxlength="128" autocomplete="new-password" required>
+
+                <label for="confirmar">Confirmar nueva contraseña</label>
+                <input type="password" id="confirmar" name="confirmar" minlength="10" maxlength="128" autocomplete="new-password" required>
+
+                <button type="submit" class="boton">Guardar</button>
+            </form>
+        </section>
+    </main>
+    <footer class="pie">
+        <p>Motor de Horarios &mdash; proyecto de portafolio de Luis Felipe Arias.</p>
+    </footer>
+    <script src="js/config.js"></script>
+    <script src="js/comun.js"></script>
+    <script src="js/clave.js"></script>
+</body>
+</html>

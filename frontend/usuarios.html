@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios — Motor de Horarios</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/tema.js"></script>
+</head>
+<body>
+    <header class="barra">
+        <span class="marca-grupo">
+            <a class="marca" href="index.html">Motor de Horarios</a>
+            <button type="button" id="alternar-tema" class="boton-tema"
+                    aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">🌓</button>
+        </span>
+        <nav class="nav-principal" id="nav"></nav>
+    </header>
+    <main>
+        <div class="cabecera-seccion">
+            <h1>Usuarios</h1>
+        </div>
+        <p class="aviso" id="aviso" hidden></p>
+
+        <section class="tarjeta">
+            <h2>Crear usuario</h2>
+            <p class="texto-suave">Se crea con rol Usuario y horario 8:00&ndash;18:00 de lunes a viernes.</p>
+            <form id="form-usuario">
+                <div class="fila-2">
+                    <div>
+                        <label for="nombre">Nombre</label>
+                        <input type="text" id="nombre" name="nombre" maxlength="100" required>
+                    </div>
+                    <div>
+                        <label for="email">Correo</label>
+                        <input type="email" id="email" name="email" maxlength="255" required>
+                    </div>
+                </div>
+                <label for="clave">Contraseña inicial (mínimo 10 caracteres)</label>
+                <input type="password" id="clave" name="clave" minlength="10" maxlength="128" autocomplete="new-password" required>
+                <div><button type="submit" class="boton">Crear usuario</button></div>
+            </form>
+        </section>
+
+        <section class="seccion">
+            <div class="contenedor-tabla">
+                <table class="tabla">
+                    <thead>
+                        <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="usuarios"><tr><td colspan="5" class="vacio">Cargando…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer class="pie">
+        <p>Motor de Horarios &mdash; proyecto de portafolio de Luis Felipe Arias.</p>
+    </footer>
+    <script src="js/config.js"></script>
+    <script src="js/comun.js"></script>
+    <script src="js/usuarios.js"></script>
+</body>
+</html>

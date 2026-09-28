@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi agenda — Motor de Horarios</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/tema.js"></script>
+</head>
+<body>
+    <header class="barra">
+        <span class="marca-grupo">
+            <a class="marca" href="index.html">Motor de Horarios</a>
+            <button type="button" id="alternar-tema" class="boton-tema"
+                    aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">🌓</button>
+        </span>
+        <nav class="nav-principal" id="nav"></nav>
+    </header>
+    <main>
+        <div class="cabecera-seccion">
+            <h1 id="titulo">Mi agenda</h1>
+            <a href="usuarios.html" id="volver-usuarios" hidden>&larr; Volver a usuarios</a>
+        </div>
+        <p class="texto-suave">El motor nunca propone reuniones fuera de este horario ni encima de los bloques ocupados, y prefiere los bloques preferidos.</p>
+        <p class="aviso" id="aviso" hidden></p>
+
+        <section class="tarjeta">
+            <h2>Horario laboral</h2>
+            <form id="form-reglas">
+                <div class="fila-2">
+                    <div>
+                        <label for="desde">Desde</label>
+                        <select id="desde" name="desde"></select>
+                    </div>
+                    <div>
+                        <label for="hasta">Hasta</label>
+                        <select id="hasta" name="hasta"></select>
+                    </div>
+                </div>
+                <fieldset>
+                    <legend>Días laborables</legend>
+                    <div class="casillas" id="dias-laborables"></div>
+                </fieldset>
+                <div><button type="submit" class="boton">Guardar horario</button></div>
+            </form>
+        </section>
+
+        <section class="seccion">
+            <h2>Bloques de agenda</h2>
+            <div class="contenedor-tabla">
+                <table class="tabla">
+                    <thead>
+                        <tr><th>Descripción</th><th>Tipo</th><th>Cuándo</th><th>Repetición</th><th></th></tr>
+                    </thead>
+                    <tbody id="bloques"><tr><td colspan="5" class="vacio">Cargando…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="seccion tarjeta">
+            <h2>Agregar bloque</h2>
+            <form id="form-bloque">
+                <label for="descripcion">Descripción</label>
+                <input type="text" id="descripcion" name="descripcion" maxlength="255" placeholder="Daily, almuerzo, clase…">
+
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo">
+                    <option value="ocupado">Ocupado (no agendar aquí)</option>
+                    <option value="preferido">Preferido (mejor si es aquí)</option>
+                </select>
+
+                <label for="fecha">Fecha (primera vez)</label>
+                <input type="date" id="fecha" name="fecha" required>
+
+                <div class="fila-2">
+                    <div>
+                        <label for="hora-inicio">Hora inicio</label>
+                        <input type="time" id="hora-inicio" name="hora_inicio" step="900" required>
+                    </div>
+                    <div>
+                        <label for="hora-fin">Hora fin</label>
+                        <input type="time" id="hora-fin" name="hora_fin" step="900" required>
+                    </div>
+                </div>
+
+                <label for="repeticion">Repetición</label>
+                <select id="repeticion" name="repeticion">
+                    <option value="">No se repite</option>
+                    <option value="diaria">Todos los días</option>
+                    <option value="laborables">Días laborables (lunes a viernes)</option>
+                    <option value="semanal">Semanal, estos días…</option>
+                </select>
+
+                <fieldset id="campo-dias-semana" hidden>
+                    <legend>Días de la semana</legend>
+                    <div class="casillas" id="dias-semana"></div>
+                </fieldset>
+
+                <div id="campo-hasta" hidden>
+                    <label for="repetir-hasta">Repetir hasta (opcional)</label>
+                    <input type="date" id="repetir-hasta" name="repetir_hasta">
+                </div>
+
+                <div><button type="submit" class="boton">Agregar bloque</button></div>
+            </form>
+        </section>
+    </main>
+    <footer class="pie">
+        <p>Motor de Horarios &mdash; proyecto de portafolio de Luis Felipe Arias.</p>
+    </footer>
+    <script src="js/config.js"></script>
+    <script src="js/comun.js"></script>
+    <script src="js/agenda.js"></script>
+</body>
+</html>

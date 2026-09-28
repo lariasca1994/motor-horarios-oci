@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reuniones — Motor de Horarios</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/tema.js"></script>
+</head>
+<body>
+    <header class="barra">
+        <span class="marca-grupo">
+            <a class="marca" href="index.html">Motor de Horarios</a>
+            <button type="button" id="alternar-tema" class="boton-tema"
+                    aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">🌓</button>
+        </span>
+        <nav class="nav-principal" id="nav"></nav>
+    </header>
+    <main>
+        <div class="cabecera-seccion">
+            <h1 id="titulo">Mis reuniones</h1>
+        </div>
+        <p class="aviso" id="aviso" hidden></p>
+
+        <div class="rejilla-reuniones">
+            <section class="tarjeta">
+                <h2>Proponer reunión</h2>
+                <form id="form-reunion">
+                    <label for="titulo-reunion">Título</label>
+                    <input type="text" id="titulo-reunion" name="titulo" maxlength="200" required>
+
+                    <label for="duracion">Duración (minutos)</label>
+                    <input type="number" id="duracion" name="duracion" value="60" min="15" max="480" step="15" required>
+
+                    <label for="inicio">Buscar desde</label>
+                    <input type="datetime-local" id="inicio" name="inicio" required>
+
+                    <label for="fin">Hasta</label>
+                    <input type="datetime-local" id="fin" name="fin" required>
+
+                    <div id="campo-organizador" hidden>
+                        <label for="organizador">Organizador</label>
+                        <select id="organizador" name="organizador"></select>
+                    </div>
+
+                    <fieldset>
+                        <legend>Participantes (recibirán el correo)</legend>
+                        <div id="participantes" class="casillas-lista"></div>
+                    </fieldset>
+
+                    <button type="submit" class="boton">Buscar huecos</button>
+                </form>
+            </section>
+
+            <section>
+                <div id="lista" class="lista-tarjetas"><p class="vacio">Cargando…</p></div>
+            </section>
+        </div>
+    </main>
+    <footer class="pie">
+        <p>Motor de Horarios &mdash; proyecto de portafolio de Luis Felipe Arias.</p>
+    </footer>
+    <script src="js/config.js"></script>
+    <script src="js/comun.js"></script>
+    <script src="js/reuniones.js"></script>
+</body>
+</html>
