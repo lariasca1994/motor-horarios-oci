@@ -34,7 +34,7 @@ services:
       - key: BREVO_API_KEY
         sync: false
       - key: EMAIL_FROM
-        value: luisfariasc7@proton.me
+        sync: false            # remitente verificado en Brevo
       - key: EMAIL_FROM_NAME
         value: Reservas Corferias
       - key: CORS_ORIGINS
