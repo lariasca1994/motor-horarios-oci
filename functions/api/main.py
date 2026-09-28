@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from auth import (bloqueado, crear_token, hash_clave, limpiar_fallos, registrar_fallo,
                   solo_admin, usuario_actual, verificar_clave)
-from db import conexion
+from db import conexion, modo_bd
 from modelos import (
     CambioClave, Confirmacion, Disponibilidad, DisponibilidadIn, Login, Reglas, Reunion,
     ReunionIn, Sesion, Sugerencia, Usuario, UsuarioCambios, UsuarioIn,
@@ -22,7 +22,9 @@ app = FastAPI(title="Motor de Horarios", version="0.3.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",")],
+    # Tolera comillas, espacios y "/" final al pegar la variable
+    allow_origins=[o.strip().strip("\"'").strip().rstrip("/")
+                   for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -63,7 +65,8 @@ def health_db():
         return {"status": "ok"}
     except KeyError as e:
         # Solo el nombre de la variable, nunca su valor
-        raise HTTPException(status_code=503, detail=f"BD no disponible: falta la variable de entorno {e.args[0]}")
+        raise HTTPException(status_code=503, detail=f"BD no disponible: falta la variable de entorno "
+                                                    f"{e.args[0]} (DB_MODE recibido: {modo_bd()!r})")
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"BD no disponible: {type(e).__name__}")
 

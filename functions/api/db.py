@@ -18,8 +18,13 @@ import pymysql.cursors
 _ca_path = None
 
 
+def modo_bd() -> str:
+    """Tolera comillas y espacios que a veces quedan al pegar variables en paneles web."""
+    return os.environ.get("DB_MODE", "vault").strip().strip("\"'").strip().lower()
+
+
 def _config() -> dict:
-    if os.environ.get("DB_MODE", "vault") == "env":
+    if modo_bd() == "env":
         return {
             "host": os.environ["DB_HOST"],
             "port": int(os.environ.get("DB_PORT", "3306")),
