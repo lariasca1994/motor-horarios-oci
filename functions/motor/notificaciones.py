@@ -74,11 +74,16 @@ def enviar_correos(destinatarios: Iterable[Destinatario], asunto: str, cuerpo: s
 def _enviar_brevo_api(destinatarios, asunto: str, cuerpo: str) -> int:
     import httpx
 
-    remitente = {"email": os.environ["EMAIL_FROM"],
+    clave = os.environ["BREVO_API_KEY"].strip().strip("\"'").strip()
+    if clave.startswith("xsmtpsib-"):
+        logger.error("BREVO_API_KEY es una clave SMTP (xsmtpsib-). La API de Brevo necesita una "
+                     "API key (xkeysib-): Brevo > SMTP & API > pestaña 'API Keys'.")
+        return 0
+    remitente = {"email": os.environ["EMAIL_FROM"].strip(),
                  "name": os.environ.get("EMAIL_FROM_NAME", "Motor de Horarios")}
     enviados = 0
     with httpx.Client(base_url="https://api.brevo.com/v3", timeout=20,
-                      headers={"api-key": os.environ["BREVO_API_KEY"], "accept": "application/json"}) as cliente:
+                      headers={"api-key": clave, "accept": "application/json"}) as cliente:
         for nombre, email in destinatarios:
             r = cliente.post("/smtp/email", json={
                 "sender": remitente,
