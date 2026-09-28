@@ -21,7 +21,7 @@ MySQL HeatWave Free (subred privada de OCI)
 
 | Carpeta | Contenido |
 |---|---|
-| `functions/api` | API REST (FastAPI), autenticación y permisos. |
+| `functions/api` | API REST (FastAPI) y autenticación. |
 | `functions/motor` | Cálculo de huecos (`motor.py`), RRULE, `procesamiento.py`, correos. |
 | `frontend` | HTML/CSS/JS estático (Vercel). La URL de la API está en `js/config.js`. |
 | `db` | `001_esquema.sql` (tablas), `002_datos_demo.sql` (solo desarrollo) y `003_reglas_por_defecto.sql` (migración). |
@@ -42,30 +42,22 @@ acento identifica la base de datos: azul MySQL (`#00758f`).
 | `login.html` / `registro.html` | Ingreso y registro público (las cuentas nuevas son siempre *Usuario*) |
 | `reuniones.html` | Proponer reuniones, ver sugerencias, confirmar / recalcular / cancelar |
 | `agenda.html` | Horario laboral, días laborables y bloques ocupados/preferidos (puntuales o recurrentes) |
-| `usuarios.html` | Solo admin: crear usuarios, editar nombres, activar/desactivar, ver la agenda de cualquiera |
 | `clave.html` | Cambio de contraseña |
 
 `js/config.js` usa `http://localhost:8000` en local y la API de Render en producción.
 El flujo `.github/workflows/mantener-activo.yml` consulta `/health` cada 10 min para que
 Render no se suspenda.
 
-## Acceso y roles
+## Acceso
 
-Todo requiere iniciar sesión (salvo `/health`). Contraseñas con scrypt; sesión con
-token firmado (HMAC-SHA256, 12 h) que el frontend guarda en `sessionStorage`.
+Todo requiere iniciar sesión (salvo la portada y `/health`). Cualquiera puede crear su
+cuenta en `registro.html`; las cuentas nuevas empiezan con horario 8:00–18:00 de lunes a
+viernes. Cada persona ve las reuniones que organiza o en las que participa y gestiona su
+propia agenda. Contraseñas con scrypt; sesión con token firmado (HMAC-SHA256, 12 h).
 
-| | Administrador | Usuario |
-|---|---|---|
-| Personas | crea usuarios, edita nombres, desactiva, elimina; ve correos | solo nombres (para elegir participantes) |
-| Reuniones | ve y gestiona todas; elige organizador | ve aquellas en que organiza o participa; organiza él mismo |
-| Confirmar / recalcular / cancelar | todas | solo las que organiza |
-| Disponibilidad y reglas | de cualquiera | solo las propias |
-
-Cualquiera puede registrarse desde `registro.html` (rol *Usuario*, horario 8:00–18:00 L-V).
-Los administradores solo se asignan con las cuentas iniciales, que se leen de `deploy/.usuarios_iniciales` (`email|clave|rol|nombre`,
-no se sube a git) y se crean en cada despliegue con `local/crear_usuarios.py`, sin
-sobrescribir contraseñas que ya se hayan cambiado. Cada persona recibe por correo
-(SMTP, Brevo) las sugerencias de las reuniones en que participa.
+Las cuentas iniciales de la demo se cargan desde un archivo privado (no versionado) con
+`local/crear_usuarios.py`, sin sobrescribir contraseñas ya cambiadas. Cada participante
+recibe por correo (Brevo) las sugerencias de sus reuniones.
 
 ## Desarrollo local (sin Docker)
 
@@ -103,6 +95,7 @@ Para recrear la base: `.venv\Scripts\python local\crear_bd.py --reset`.
 | `CORS_ORIGINS` | api | orígenes permitidos separados por coma (`*` por defecto) |
 | `AUTH_SECRET` | api | clave para firmar sesiones (obligatoria en producción) |
 | `AUTH_TTL_HORAS` | api | duración de la sesión (12 por defecto) |
+| `API_DOCS` | api | `true` para exponer `/docs` (desactivado por defecto) |
 | `EMAIL_MODE` | motor | `log` (por defecto), `brevo_api` o `smtp` |
 | `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME` | motor | envío por la API de Brevo |
 | `SMTP_SECRET_OCID` | motor | secreto JSON en Vault con `host`, `port`, `user`, `password`, `from` |

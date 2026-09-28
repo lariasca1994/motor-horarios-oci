@@ -19,7 +19,6 @@
             <tr>
                 <td>${celdaNombre}</td>
                 <td>${esc(u.email)}</td>
-                <td><span class="rol-actual">${u.rol === "admin" ? "ADMIN" : "USUARIO"}</span></td>
                 <td><span class="estado-usuario ${u.activo ? "estado-usuario-activo" : "estado-usuario-suspendido"}">
                     ${u.activo ? "Activo" : "Inactivo"}</span></td>
                 <td>

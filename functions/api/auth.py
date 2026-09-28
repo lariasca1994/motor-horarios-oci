@@ -125,5 +125,5 @@ def usuario_actual(cred: HTTPAuthorizationCredentials | None = Depends(_bearer))
 
 def solo_admin(u: dict = Depends(usuario_actual)) -> dict:
     if u["rol"] != "admin":
-        raise HTTPException(status_code=403, detail="solo administradores")
+        raise HTTPException(status_code=403, detail="no tienes permiso para esta acción")
     return u

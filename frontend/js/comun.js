@@ -24,7 +24,7 @@ function irA(pagina) {
     location.href = pagina;
 }
 
-/** Exige sesión (y opcionalmente rol admin); si no hay, redirige al login. */
+/** Exige sesión (y opcionalmente permisos de gestión); si no, redirige. */
 function exigirSesion({ admin = false } = {}) {
     const u = sesion.usuario;
     if (!u) {
@@ -33,7 +33,7 @@ function exigirSesion({ admin = false } = {}) {
     }
     if (admin && u.rol !== "admin") {
         irA("reuniones.html");
-        throw new Error("solo administradores");
+        throw new Error("sin permiso");
     }
     return u;
 }
@@ -113,7 +113,6 @@ function pintarNav() {
         .join("");
     if (u) {
         nav.insertAdjacentHTML("beforeend", `
-            <span class="rol-actual">${u.rol === "admin" ? "ADMIN" : "USUARIO"}</span>
             <a href="#" id="salir">Salir (${esc(u.nombre)})</a>`);
         document.getElementById("salir").addEventListener("click", (e) => {
             e.preventDefault();

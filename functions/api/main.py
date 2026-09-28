@@ -18,7 +18,10 @@ from motor_cliente import disparar_motor
 
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI(title="Motor de Horarios", version="0.3.0")
+_docs = os.environ.get("API_DOCS", "false").lower() == "true"
+app = FastAPI(title="Motor de Horarios", version="0.4.0",
+              docs_url="/docs" if _docs else None, redoc_url=None,
+              openapi_url="/openapi.json" if _docs else None)
 
 app.add_middleware(
     CORSMiddleware,
@@ -147,7 +150,7 @@ def crear_usuario(nuevo: UsuarioIn, admin: dict = Depends(solo_admin)):
 @app.patch("/usuarios/{usuario_id}", response_model=Usuario)
 def editar_usuario(usuario_id: int, cambios: UsuarioCambios, admin: dict = Depends(solo_admin)):
     if usuario_id == admin["id"] and (cambios.rol == "usuario" or cambios.activo is False):
-        raise HTTPException(status_code=400, detail="no puedes quitarte el rol de admin ni desactivarte")
+        raise HTTPException(status_code=400, detail="no puedes cambiar ni desactivar tu propia cuenta")
     campos, valores = [], []
     if cambios.nombre is not None:
         campos.append("nombre = %s"); valores.append(cambios.nombre.strip())
@@ -300,7 +303,7 @@ def _cargar_reunion(cur, reunion_id: int, visor: dict) -> Reunion:
 
 def _puede_gestionar(r: Reunion, u: dict):
     if not _es_admin(u) and r.organizador_id != u["id"]:
-        _prohibido("solo el organizador o un admin puede modificar la reunión")
+        _prohibido("solo quien organiza la reunión puede modificarla")
 
 
 @app.get("/reuniones", response_model=List[Reunion])
