@@ -24,11 +24,30 @@ MySQL HeatWave Free (subred privada de OCI)
 | `functions/api` | API REST (FastAPI), autenticación y permisos. |
 | `functions/motor` | Cálculo de huecos (`motor.py`), RRULE, `procesamiento.py`, correos. |
 | `frontend` | HTML/CSS/JS estático (Vercel). La URL de la API está en `js/config.js`. |
-| `db` | `001_esquema.sql` (tablas) y `002_datos_demo.sql` (solo desarrollo). |
+| `db` | `001_esquema.sql` (tablas), `002_datos_demo.sql` (solo desarrollo) y `003_reglas_por_defecto.sql` (migración). |
 | `deploy` | Scripts de OCI (red, MySQL, Vault, NLB). |
 
 Render gratis se suspende tras 15 min sin tráfico: la primera petición tarda ~50 s.
 Las fechas se guardan sin zona horaria y se interpretan como hora de Bogotá.
+
+## Frontend
+
+Páginas estáticas con el mismo sistema de diseño que los demás proyectos del portafolio
+(barra con tema claro/oscuro, portada con insignias, tarjetas de formulario). El color de
+acento identifica la base de datos: azul MySQL (`#00758f`).
+
+| Página | Contenido |
+|---|---|
+| `index.html` | Portada |
+| `login.html` / `registro.html` | Ingreso y registro público (las cuentas nuevas son siempre *Usuario*) |
+| `reuniones.html` | Proponer reuniones, ver sugerencias, confirmar / recalcular / cancelar |
+| `agenda.html` | Horario laboral, días laborables y bloques ocupados/preferidos (puntuales o recurrentes) |
+| `usuarios.html` | Solo admin: crear usuarios, editar nombres, activar/desactivar, ver la agenda de cualquiera |
+| `clave.html` | Cambio de contraseña |
+
+`js/config.js` usa `http://localhost:8000` en local y la API de Render en producción.
+El flujo `.github/workflows/mantener-activo.yml` consulta `/health` cada 10 min para que
+Render no se suspenda.
 
 ## Acceso y roles
 
@@ -37,12 +56,13 @@ token firmado (HMAC-SHA256, 12 h) que el frontend guarda en `sessionStorage`.
 
 | | Administrador | Usuario |
 |---|---|---|
-| Personas | crea, desactiva, elimina; ve correos | solo nombres (para elegir participantes) |
+| Personas | crea usuarios, edita nombres, desactiva, elimina; ve correos | solo nombres (para elegir participantes) |
 | Reuniones | ve y gestiona todas; elige organizador | ve aquellas en que organiza o participa; organiza él mismo |
 | Confirmar / recalcular / cancelar | todas | solo las que organiza |
 | Disponibilidad y reglas | de cualquiera | solo las propias |
 
-Las cuentas iniciales se leen de `deploy/.usuarios_iniciales` (`email|clave|rol|nombre`,
+Cualquiera puede registrarse desde `registro.html` (rol *Usuario*, horario 8:00–18:00 L-V).
+Los administradores solo se asignan con las cuentas iniciales, que se leen de `deploy/.usuarios_iniciales` (`email|clave|rol|nombre`,
 no se sube a git) y se crean en cada despliegue con `local/crear_usuarios.py`, sin
 sobrescribir contraseñas que ya se hayan cambiado. Cada persona recibe por correo
 (SMTP, Brevo) las sugerencias de las reuniones en que participa.

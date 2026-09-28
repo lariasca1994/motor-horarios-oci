@@ -1,0 +1,19 @@
+# Render (plan gratuito) suspende el servicio tras 15 min sin tráfico y la siguiente
+# visita tarda ~50 s. Este flujo lo consulta cada 10 min para mantenerlo despierto.
+# Nota: GitHub pausa los flujos programados tras 60 días sin actividad en el repo.
+name: Mantener API activa
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Consultar /health
+        run: curl --fail --silent --show-error --max-time 90 --retry 2 https://motor-horarios-oci-1.onrender.com/health
