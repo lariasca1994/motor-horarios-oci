@@ -45,7 +45,8 @@ def main():
             if fila is None:
                 cur.execute("INSERT INTO usuarios (nombre, email, rol, password_hash) VALUES (%s, %s, %s, %s)",
                             (nombre, email, rol, hash_clave(clave)))
-                cur.execute("INSERT INTO reglas_usuario (usuario_id) VALUES (%s)", (cur.lastrowid,))
+                cur.execute("INSERT INTO reglas_usuario (usuario_id, no_antes_de, no_despues_de) "
+                            "VALUES (%s, 8, 18)", (cur.lastrowid,))
                 print(f"creada      {email} ({rol})")
             else:
                 cur.execute("UPDATE usuarios SET nombre = %s, rol = %s, activo = TRUE WHERE id = %s",

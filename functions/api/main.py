@@ -115,18 +115,33 @@ def listar_usuarios(u: dict = Depends(usuario_actual)):
         return [_a_usuario(r, u) for r in cur.fetchall()]
 
 
-@app.post("/usuarios", response_model=Usuario, status_code=201)
-def crear_usuario(nuevo: UsuarioIn, admin: dict = Depends(solo_admin)):
+def _insertar_usuario(nuevo: UsuarioIn) -> Usuario:
+    """Crea una persona con rol 'usuario' y el horario laboral por defecto (8-18, L-V)."""
+    nombre, email = nuevo.nombre.strip(), nuevo.email.lower()
     with conexion() as conn, conn.cursor() as cur:
         try:
-            cur.execute("INSERT INTO usuarios (nombre, email, rol, password_hash) VALUES (%s, %s, %s, %s)",
-                        (nuevo.nombre.strip(), nuevo.email.lower(), nuevo.rol, hash_clave(nuevo.clave)))
+            cur.execute("INSERT INTO usuarios (nombre, email, rol, password_hash) VALUES (%s, %s, 'usuario', %s)",
+                        (nombre, email, hash_clave(nuevo.clave)))
             usuario_id = cur.lastrowid
-            cur.execute("INSERT INTO reglas_usuario (usuario_id) VALUES (%s)", (usuario_id,))
+            cur.execute("INSERT INTO reglas_usuario (usuario_id, no_antes_de, no_despues_de) "
+                        "VALUES (%s, 8, 18)", (usuario_id,))
             conn.commit()
         except pymysql.err.IntegrityError:
-            raise HTTPException(status_code=409, detail="ya existe una persona con ese correo")
-    return Usuario(id=usuario_id, nombre=nuevo.nombre.strip(), email=nuevo.email.lower(), rol=nuevo.rol)
+            raise HTTPException(status_code=409, detail="ya existe una cuenta con ese correo")
+    return Usuario(id=usuario_id, nombre=nombre, email=email, rol="usuario")
+
+
+@app.post("/auth/registro", response_model=Sesion, status_code=201)
+def registro(nuevo: UsuarioIn):
+    """Registro público: las cuentas nuevas siempre son 'usuario'; los admins se asignan aparte."""
+    u = _insertar_usuario(nuevo)
+    return Sesion(token=crear_token(u.id), usuario=u)
+
+
+@app.post("/usuarios", response_model=Usuario, status_code=201)
+def crear_usuario(nuevo: UsuarioIn, admin: dict = Depends(solo_admin)):
+    u = _insertar_usuario(nuevo)
+    return _a_usuario(u.model_dump(), admin)
 
 
 @app.patch("/usuarios/{usuario_id}", response_model=Usuario)

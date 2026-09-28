@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
 -- Reglas personales de cada usuario (una fila por usuario).
 CREATE TABLE IF NOT EXISTS reglas_usuario (
     usuario_id      INT PRIMARY KEY,
-    no_antes_de     TINYINT UNSIGNED NULL,          -- hora 0-23
-    no_despues_de   TINYINT UNSIGNED NULL,          -- hora 0-24
+    no_antes_de     TINYINT UNSIGNED NULL DEFAULT 8,   -- hora 0-23 (NULL = sin límite)
+    no_despues_de   TINYINT UNSIGNED NULL DEFAULT 18,  -- hora 1-24 (NULL = sin límite)
     dias_laborables VARCHAR(20) NOT NULL DEFAULT '0,1,2,3,4',  -- 0=lunes … 6=domingo
     CONSTRAINT fk_reglas_usuario FOREIGN KEY (usuario_id)
         REFERENCES usuarios(id) ON DELETE CASCADE,

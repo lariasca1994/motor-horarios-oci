@@ -8,10 +8,10 @@ Rol = Literal["admin", "usuario"]
 
 
 class UsuarioIn(BaseModel):
+    """Alta de persona (registro público o por un admin): siempre con rol 'usuario'."""
     nombre: str = Field(min_length=1, max_length=100)
     email: EmailStr
     clave: str = Field(min_length=10, max_length=128)
-    rol: Rol = "usuario"
 
 
 class UsuarioCambios(BaseModel):
