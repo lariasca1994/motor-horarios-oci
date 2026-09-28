@@ -1,23 +1,55 @@
 # Motor de Horarios sobre OCI
 
+<p>
+  <a href="https://motor-horarios-oci.vercel.app"><img src="docs/demo-badge.svg" alt="Abrir la demo en vivo" height="32"></a>
+  <a href="https://frontend-nine-topaz-99.vercel.app"><img src="https://portafolio-status.onrender.com/api/status/motor-horarios-oci/badge.svg" alt="Estado en vivo del proyecto" height="32"></a>
+  <a href="https://d4i3vsgw7xwmh.cloudfront.net"><img src="https://portafolio-status.onrender.com/api/status/motor-horarios-oci/qa-badge.svg" alt="Fecha y resultado de la última prueba E2E" height="32"></a>
+</p>
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![MySQL HeatWave](https://img.shields.io/badge/MySQL_HeatWave-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Oracle Cloud](https://img.shields.io/badge/Oracle_Cloud-C74634?style=for-the-badge&logo=oracle&logoColor=white)
+![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Brevo](https://img.shields.io/badge/Brevo-0B996E?style=for-the-badge&logo=brevo&logoColor=white)
+
+> 🚧 **En desarrollo:** la versión publicada funciona, pero todavía se están
+> ajustando detalles.
+
 Coordina reuniones entre varias personas: cada usuario registra sus bloques
 ocupados/preferidos (con recurrencia RRULE) y sus reglas (horario y días
 laborables); el motor propone los 3 mejores huecos comunes y avisa por
 correo (SMTP) a cada persona seleccionada.
 
+### En pocas palabras
+
+- **Qué hace:** en lugar de mandar correos preguntando "¿cuándo puedes?", cada
+  persona registra una sola vez su horario laboral y sus bloques ocupados o
+  preferidos. Al proponer una reunión, el motor cruza las agendas de todos los
+  participantes y sugiere **los 3 mejores horarios** en que todos están libres.
+- **Qué pasa después:** cada participante recibe las sugerencias por correo; el
+  organizador confirma, recalcula o cancela desde la aplicación.
+- **Cómo probarlo:** entra a la [demo](https://motor-horarios-oci.vercel.app),
+  crea una cuenta en *Registro*, llena tu agenda y propone una reunión. La
+  primera carga puede tardar ~50 s si el servidor estaba dormido. Para correrlo
+  en tu equipo, ve a [Desarrollo local](#desarrollo-local-sin-docker).
+
 ## Arquitectura (producción)
 
-```
-Vercel (frontend estático, HTTPS)
-   │  fetch + token
-   ▼
-Render (Docker, plan free): API FastAPI + motor en el mismo proceso
-   │  MySQL sobre TLS con certificado fijado            │ API HTTP
-   ▼                                                    ▼
-OCI Network Load Balancer (IP pública, 3306 solo para IPs permitidas)   Brevo (correos)
-   ▼
-MySQL HeatWave Free (subred privada de OCI)
-```
+<p align="center">
+  <img src="docs/arquitectura.svg" alt="Diagrama de arquitectura: frontend en Vercel, API FastAPI y motor en Render, MySQL HeatWave en Oracle Cloud detrás de un Network Load Balancer, correos con Brevo y GitHub Actions manteniendo activo el servicio" width="100%">
+</p>
+
+- **Vercel** sirve el frontend estático; habla con la API mediante `fetch` y un
+  token de sesión.
+- **Render** corre la API FastAPI y el motor de huecos en el mismo proceso.
+- **Oracle Cloud** aloja MySQL HeatWave en una subred privada; un Network Load
+  Balancer publica el puerto 3306 solo para las IPs permitidas, y la conexión va
+  cifrada con TLS y certificado fijado.
+- **Brevo** envía a cada participante las sugerencias de sus reuniones.
+- **GitHub Actions** consulta `/health` cada 10 minutos para que Render no se
+  suspenda.
 
 | Carpeta | Contenido |
 |---|---|
@@ -106,14 +138,9 @@ Para recrear la base: `.venv\Scripts\python local\crear_bd.py --reset`.
 La cuenta Free Tier no permite Functions, API Gateway ni Service/NAT Gateway, así
 que el despliegue real usa una VM Always Free con el mismo código:
 
-```
-Navegador ──► VM Ampere A1 (Ubuntu 24.04, subred pública 10.0.20.0/24)
-                nginx: /  → frontend estático
-                       /api/ → uvicorn (functions/api)  ──► motor (local_server.py)
-                                   │                            │
-                                   └──── MySQL HeatWave Free (subred privada 10.0.21.0/24)
-              Vault (credenciales BD y SMTP) vía instance principal; correos por SMTP (Brevo)
-```
+<p align="center">
+  <img src="docs/arquitectura-oci-vm.svg" alt="Diagrama de arquitectura alternativa: VM Ampere A1 en subred pública con nginx, frontend, API y motor; MySQL HeatWave en subred privada y Vault para las credenciales" width="100%">
+</p>
 
 Scripts en `deploy/` (bash, OCI CLI). Los OCID quedan en `deploy/estado.env`;
 la clave del admin de MySQL en `deploy/.secretos` (no se sube a git).
