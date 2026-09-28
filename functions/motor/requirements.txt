@@ -1,0 +1,6 @@
+pymysql==1.2.3
+cryptography==50.0.1
+python-dateutil==2.9.0.post0
+oci==2.187.0
+fdk==0.1.124
+httpx==0.28.1

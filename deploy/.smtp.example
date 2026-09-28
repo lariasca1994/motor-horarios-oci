@@ -1,0 +1,8 @@
+# Copia este archivo como deploy/.smtp y completa los datos de Brevo
+# (Brevo > SMTP & API > pestaña SMTP). deploy/.smtp no se sube a git.
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USER=tu-login-smtp@smtp-brevo.com
+SMTP_PASSWORD=tu-clave-smtp
+EMAIL_FROM=remitente-verificado@tudominio.com
+EMAIL_FROM_NAME=Reservas Corferias

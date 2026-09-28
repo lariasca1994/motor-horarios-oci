@@ -1,0 +1,71 @@
+# Entorno local completo:  docker compose up --build
+#   Frontend  http://localhost:8080
+#   API       http://localhost:8000/docs
+#   Motor     http://localhost:8001/health
+#   MySQL     localhost:3307 (usuario motor / motor)
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: motor_horarios
+      MYSQL_USER: motor
+      MYSQL_PASSWORD: motor
+      TZ: America/Bogota
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:ro
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-umotor", "-pmotor"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  motor:
+    build:
+      context: ./functions/motor
+      dockerfile: Dockerfile.local
+    environment: &db_env
+      DB_MODE: env
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: motor
+      DB_PASSWORD: motor
+      DB_NAME: motor_horarios
+      TZ: America/Bogota
+    ports:
+      - "8001:8001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ./functions/api
+      dockerfile: Dockerfile.local
+    environment:
+      <<: *db_env
+      MOTOR_MODE: http
+      MOTOR_URL: http://motor:8001/
+      CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./functions/api:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      motor:
+        condition: service_started
+
+  frontend:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+
+volumes:
+  mysql_data:

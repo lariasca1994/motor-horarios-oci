@@ -1,0 +1,41 @@
+# Backend en Render (plan gratuito). Blueprint: Render > New > Blueprint > este repo.
+# Los valores marcados sync:false se completan en el panel de Render (no van en git).
+services:
+  - type: web
+    name: motor-horarios-api
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DB_MODE
+        value: env
+      - key: DB_HOST
+        sync: false            # IP pública del NLB de OCI
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: motor_horarios
+      - key: DB_SSL_CA_PEM
+        sync: false            # contenido de deploy/mysql_servidor.pem (certificado fijado)
+      - key: DB_SSL_CHECK_HOSTNAME
+        value: "false"
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: MOTOR_MODE
+        value: inproceso
+      - key: EMAIL_MODE
+        value: brevo_api
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: luisfariasc7@proton.me
+      - key: EMAIL_FROM_NAME
+        value: Reservas Corferias
+      - key: CORS_ORIGINS
+        sync: false            # URL del frontend en Vercel, p. ej. https://motor-horarios.vercel.app

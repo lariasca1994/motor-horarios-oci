@@ -1,0 +1,15 @@
+[Unit]
+Description=Motor de Horarios - motor de sugerencias
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=motor
+WorkingDirectory=/opt/motor-horarios/functions/motor
+EnvironmentFile=/etc/motor-horarios.env
+ExecStart=/opt/motor-horarios/.venv/bin/python local_server.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+#cloud-config
+# Preparación base de la VM (Ubuntu 24.04). El código se sube después con deploy/05_desplegar.sh
+package_update: true
+packages:
+  - nginx
+  - python3-venv
+  - python3-pip
+timezone: America/Bogota
+runcmd:
+  # Las imágenes Ubuntu de OCI bloquean todo salvo SSH en iptables: abrir 80 y 443
+  - iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+  - iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+  - netfilter-persistent save
+  - useradd --system --home /opt/motor-horarios --shell /usr/sbin/nologin motor || true
+  - mkdir -p /opt/motor-horarios && chown motor:motor /opt/motor-horarios
+  - touch /var/lib/cloud/instance/motor-listo

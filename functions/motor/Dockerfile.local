@@ -1,0 +1,9 @@
+# Desarrollo local: el motor servido por un HTTP server mínimo (usado por docker-compose)
+FROM python:3.12-slim-bookworm
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY *.py ./
+ENV PYTHONUNBUFFERED=1
+EXPOSE 8001
+CMD ["python", "local_server.py"]

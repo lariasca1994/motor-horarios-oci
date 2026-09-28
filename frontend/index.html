@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor de Horarios</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Motor de Horarios</h1>
+        <p>Coordinación de reuniones</p>
+        <div id="sesion" class="sesion" hidden>
+            <span id="sesion-nombre"></span>
+            <span id="sesion-rol" class="pill"></span>
+            <button id="btn-clave" class="secundario" type="button">Cambiar contraseña</button>
+            <button id="btn-salir" class="secundario" type="button">Salir</button>
+        </div>
+    </header>
+
+    <!-- Ingreso -->
+    <section id="vista-login" class="panel login" hidden>
+        <h2>Ingresar</h2>
+        <form id="form-login">
+            <label>Correo
+                <input type="email" name="email" autocomplete="username" required>
+            </label>
+            <label>Contraseña
+                <input type="password" name="clave" autocomplete="current-password" required>
+            </label>
+            <button type="submit">Ingresar</button>
+            <p id="msg-login" class="mensaje" hidden></p>
+        </form>
+    </section>
+
+    <!-- Cambio de contraseña -->
+    <section id="vista-clave" class="panel login" hidden>
+        <h2>Cambiar contraseña</h2>
+        <form id="form-clave">
+            <label>Contraseña actual
+                <input type="password" name="actual" autocomplete="current-password" required>
+            </label>
+            <label>Nueva contraseña (mínimo 10 caracteres)
+                <input type="password" name="nueva" minlength="10" autocomplete="new-password" required>
+            </label>
+            <div class="acciones">
+                <button type="submit">Guardar</button>
+                <button type="button" class="secundario" id="btn-clave-cancelar">Volver</button>
+            </div>
+            <p id="msg-clave" class="mensaje" hidden></p>
+        </form>
+    </section>
+
+    <main id="vista-app" hidden>
+        <div class="columna">
+            <section id="personas" class="panel" hidden>
+                <h2>Personas</h2>
+                <p class="ayuda">Solo administradores. Cada persona recibe por correo las sugerencias de las reuniones en que participa.</p>
+                <form id="form-persona" class="en-linea">
+                    <input type="text" name="nombre" placeholder="Nombre" maxlength="100" required>
+                    <input type="email" name="email" placeholder="correo@ejemplo.com" maxlength="255" required>
+                    <input type="password" name="clave" placeholder="Contraseña inicial (mín. 10)" minlength="10" autocomplete="new-password" required>
+                    <select name="rol">
+                        <option value="usuario">Usuario</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                    <button type="submit">Agregar</button>
+                </form>
+                <p id="msg-persona" class="mensaje" hidden></p>
+                <ul id="lista-personas" class="personas"></ul>
+            </section>
+
+            <section id="nueva-reunion" class="panel">
+                <h2>Proponer reunión</h2>
+                <form id="form-reunion">
+                    <label>Título
+                        <input type="text" name="titulo" maxlength="200" required>
+                    </label>
+                    <label>Duración (min)
+                        <input type="number" name="duracion" value="60" min="15" max="480" step="15" required>
+                    </label>
+                    <div class="fila">
+                        <label>Desde
+                            <input type="datetime-local" name="inicio" required>
+                        </label>
+                        <label>Hasta
+                            <input type="datetime-local" name="fin" required>
+                        </label>
+                    </div>
+                    <label id="campo-organizador" hidden>Organizador
+                        <select name="organizador" id="sel-organizador"></select>
+                    </label>
+                    <fieldset>
+                        <legend>Participantes (recibirán el correo)</legend>
+                        <div id="lista-participantes"></div>
+                    </fieldset>
+                    <button type="submit">Buscar huecos</button>
+                    <p id="msg-form" class="mensaje" hidden></p>
+                </form>
+            </section>
+        </div>
+
+        <section id="resumen" class="panel">
+            <h2 id="titulo-reuniones">Mis reuniones</h2>
+            <div id="lista-reuniones"><p class="vacio">Cargando…</p></div>
+        </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
