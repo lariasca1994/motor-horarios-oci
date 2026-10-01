@@ -14,11 +14,13 @@ import os
 import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
-from typing import Iterable, Tuple
+from typing import Callable, Iterable, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 Destinatario = Tuple[str, str]  # (nombre, email)
+# Arma el correo de una persona a partir de su nombre: (texto_plano, html).
+CuerpoPersonal = Callable[[str], Tuple[str, Optional[str]]]
 
 
 def _config_smtp() -> dict:
@@ -38,9 +40,10 @@ def _config_smtp() -> dict:
     }
 
 
-def enviar_correos(destinatarios: Iterable[Destinatario], asunto: str, cuerpo: str) -> int:
+def enviar_correos(destinatarios: Iterable[Destinatario], asunto: str, cuerpo: CuerpoPersonal) -> int:
     """
-    Envía un correo independiente a cada destinatario (nadie ve el email de los demás).
+    Envía un correo independiente a cada destinatario (nadie ve el email de los demás),
+    en HTML y texto plano, armado con su nombre por `cuerpo(nombre)`.
     Devuelve cuántos se enviaron; un fallo con una persona no impide enviar al resto.
     """
     destinatarios = list(destinatarios)
@@ -49,7 +52,7 @@ def enviar_correos(destinatarios: Iterable[Destinatario], asunto: str, cuerpo: s
         return _enviar_brevo_api(destinatarios, asunto, cuerpo)
     if modo != "smtp":
         for nombre, email in destinatarios:
-            logger.info("[correo local] Para: %s <%s> | %s\n%s", nombre, email, asunto, cuerpo)
+            logger.info("[correo local] Para: %s <%s> | %s\n%s", nombre, email, asunto, cuerpo(nombre)[0])
         return 0
 
     cfg = _config_smtp()
@@ -62,7 +65,10 @@ def enviar_correos(destinatarios: Iterable[Destinatario], asunto: str, cuerpo: s
             msg["From"] = formataddr((cfg["from_name"], cfg["from"]))
             msg["To"] = formataddr((nombre, email))
             msg["Subject"] = asunto
-            msg.set_content(f"Hola {nombre},\n\n{cuerpo}\n")
+            texto, html = cuerpo(nombre)
+            msg.set_content(texto)
+            if html:
+                msg.add_alternative(html, subtype="html")
             try:
                 smtp.send_message(msg)
                 enviados += 1
@@ -71,7 +77,7 @@ def enviar_correos(destinatarios: Iterable[Destinatario], asunto: str, cuerpo: s
     return enviados
 
 
-def _enviar_brevo_api(destinatarios, asunto: str, cuerpo: str) -> int:
+def _enviar_brevo_api(destinatarios, asunto: str, cuerpo: CuerpoPersonal) -> int:
     import httpx
 
     clave = os.environ["BREVO_API_KEY"].strip().strip("\"'").strip()
@@ -85,12 +91,16 @@ def _enviar_brevo_api(destinatarios, asunto: str, cuerpo: str) -> int:
     with httpx.Client(base_url="https://api.brevo.com/v3", timeout=20,
                       headers={"api-key": clave, "accept": "application/json"}) as cliente:
         for nombre, email in destinatarios:
-            r = cliente.post("/smtp/email", json={
+            texto, html = cuerpo(nombre)
+            mensaje = {
                 "sender": remitente,
                 "to": [{"email": email, "name": nombre}],
                 "subject": asunto,
-                "textContent": f"Hola {nombre},\n\n{cuerpo}\n",
-            })
+                "textContent": texto,
+            }
+            if html:
+                mensaje["htmlContent"] = html
+            r = cliente.post("/smtp/email", json=mensaje)
             if r.is_success:
                 enviados += 1
             else:

@@ -5,4 +5,4 @@ SMTP_PORT=587
 SMTP_USER=tu-login-smtp@smtp-brevo.com
 SMTP_PASSWORD=tu-clave-smtp
 EMAIL_FROM=remitente-verificado@tudominio.com
-EMAIL_FROM_NAME=Reservas Corferias
+EMAIL_FROM_NAME=Motor de Horarios

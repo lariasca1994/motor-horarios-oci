@@ -6,10 +6,12 @@ La usan func.py (OCI Functions), local_server.py (servicio HTTP) y la API
 directamente cuando MOTOR_MODE=inproceso (p. ej. en Render).
 """
 import logging
+import os
 
 from db import conexion
 from motor import calcular_huecos
 from notificaciones import enviar_correos
+from plantilla_correo import html_sugerencias, texto_sugerencias
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +62,15 @@ def procesar_reunion(reunion_id: int) -> dict:
 
     enviados = 0
     try:
+        nombres = [n for n, _ in personas]
+        enlace = _enlace_reuniones()
         enviados = enviar_correos(
             personas,
-            asunto=f"Sugerencias para: {reunion['titulo']}",
-            cuerpo=_formatear_sugerencias(reunion["titulo"], [n for n, _ in personas], huecos),
+            asunto=f"Horarios sugeridos · {reunion['titulo']}",
+            cuerpo=lambda nombre: (
+                texto_sugerencias(nombre, reunion, nombres, huecos, enlace),
+                html_sugerencias(nombre, reunion, nombres, huecos, enlace),
+            ),
         )
     except Exception:
         logger.exception("Falló el envío de correos de la reunión %s", reunion_id)
@@ -98,11 +105,10 @@ def _cargar_eventos(cur, usuarios, v_ini, v_fin) -> dict:
     return eventos
 
 
-def _formatear_sugerencias(titulo: str, participantes: list, huecos: list) -> str:
-    lineas = [f"Reunión: {titulo}", f"Participantes: {', '.join(participantes)}", ""]
-    if not huecos:
-        lineas.append("No se encontraron huecos libres para todos en la ventana indicada.")
-    for i, h in enumerate(huecos, 1):
-        lineas.append(f"Opción {i}: {h['inicio']:%a %d/%m/%Y %H:%M} – {h['fin']:%H:%M} "
-                      f"(score {h['score']})")
-    return "\n".join(lineas)
+def _enlace_reuniones():
+    """Página de reuniones del frontend: FRONTEND_URL o, si no, el primer origen de CORS_ORIGINS."""
+    base = os.environ.get("FRONTEND_URL", "").strip()
+    if not base:
+        origenes = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+        base = next((o for o in origenes if o.startswith("http")), "")
+    return f"{base.rstrip('/')}/reuniones.html" if base else None
