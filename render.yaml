@@ -37,5 +37,7 @@ services:
         sync: false            # remitente verificado en Brevo
       - key: EMAIL_FROM_NAME
         value: Motor de Horarios
+      - key: CORREOS_COPIA
+        sync: false            # copia oculta de cada reunion (correos separados por coma)
       - key: CORS_ORIGINS
         sync: false            # URL del frontend en Vercel, p. ej. https://motor-horarios.vercel.app

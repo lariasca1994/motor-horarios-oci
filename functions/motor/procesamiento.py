@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def procesar_reunion(reunion_id: int) -> dict:
     with conexion() as conn, conn.cursor() as cur:
         cur.execute(
-            "SELECT id, titulo, duracion_min, ventana_inicio, ventana_fin, estado "
+            "SELECT id, titulo, duracion_min, ventana_inicio, ventana_fin, estado, organizador_id "
             "FROM reuniones WHERE id = %s FOR UPDATE",
             (reunion_id,),
         )
@@ -60,6 +60,10 @@ def procesar_reunion(reunion_id: int) -> dict:
         cur.execute("SELECT nombre, email FROM usuarios WHERE id IN %s ORDER BY nombre", (usuarios,))
         personas = [(r["nombre"], r["email"]) for r in cur.fetchall()]
 
+        cur.execute("SELECT nombre, email FROM usuarios WHERE id = %s", (reunion["organizador_id"],))
+        fila = cur.fetchone()
+        organizador = (fila["nombre"], fila["email"]) if fila else None
+
     enviados = 0
     try:
         nombres = [n for n, _ in personas]
@@ -71,6 +75,7 @@ def procesar_reunion(reunion_id: int) -> dict:
                 texto_sugerencias(nombre, reunion, nombres, huecos, enlace),
                 html_sugerencias(nombre, reunion, nombres, huecos, enlace),
             ),
+            organizador=organizador,
         )
     except Exception:
         logger.exception("Falló el envío de correos de la reunión %s", reunion_id)
