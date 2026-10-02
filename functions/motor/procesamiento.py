@@ -10,8 +10,8 @@ import os
 
 from db import conexion
 from motor import calcular_huecos
-from notificaciones import enviar_correos
-from plantilla_correo import html_sugerencias, texto_sugerencias
+from notificaciones import enviar_correos, enviar_telegram
+from plantilla_correo import html_sugerencias, telegram_sugerencias, texto_sugerencias
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,12 @@ def procesar_reunion(reunion_id: int) -> dict:
         )
     except Exception:
         logger.exception("Falló el envío de correos de la reunión %s", reunion_id)
+
+    # Aviso por Telegram con el mismo contenido, independiente del correo.
+    try:
+        enviar_telegram(telegram_sugerencias(reunion, organizador, nombres, huecos), enlace)
+    except Exception:
+        logger.exception("Falló el aviso por Telegram de la reunión %s", reunion_id)
 
     return {"status": estado, "huecos": len(huecos), "correos": enviados}
 

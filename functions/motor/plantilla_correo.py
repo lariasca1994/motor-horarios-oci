@@ -146,3 +146,25 @@ def texto_sugerencias(nombre: str, reunion: dict, participantes: List[str], huec
     if enlace:
         lineas += ["", f"Ver la reunión y confirmar: {enlace}"]
     return "\n".join(lineas)
+
+
+def telegram_sugerencias(reunion: dict, organizador: Optional[tuple], participantes: List[str],
+                         huecos: List[dict]) -> str:
+    """Mismo contenido para Telegram (solo negrita, cursiva y enlaces; máx. 4.096 caracteres)."""
+    lineas = [
+        "🗓️ <b>Horarios sugeridos</b> · Motor de Horarios",
+        f"<b>{escape(reunion['titulo'])}</b>",
+        "",
+        f"<b>Organiza:</b> {escape(organizador[0]) if organizador else '—'}",
+        f"<b>Participantes:</b> {escape(', '.join(participantes))}",
+        f"<b>Duración:</b> {reunion['duracion_min']} minutos",
+        "",
+    ]
+    if not huecos:
+        lineas.append("⚠️ No hay ningún horario en el que todos estén libres dentro de la ventana indicada.")
+    for i, h in enumerate(huecos, 1):
+        calif, _, _ = _calificacion(h["score"])
+        lineas.append(f"{'⭐' if i == 1 else '•'} <b>Opción {i}</b>{' (recomendada)' if i == 1 else ''}: "
+                      f"{escape(fecha_larga(h['inicio']))}, {h['inicio']:%H:%M} – {h['fin']:%H:%M} "
+                      f"· {calif}, puntaje {h['score']}")
+    return "\n".join(lineas)[:4000]

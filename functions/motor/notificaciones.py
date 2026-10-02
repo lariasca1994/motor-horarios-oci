@@ -148,3 +148,29 @@ def _enviar_brevo_api(destinatarios, asunto: str, cuerpo: CuerpoPersonal,
             else:
                 logger.error("Brevo rechazó el correo a %s: %s %s", email, r.status_code, r.text[:300])
     return enviados
+
+
+def enviar_telegram(texto: str, enlace: Optional[str] = None, texto_boton: str = "Ver la reunión") -> bool:
+    """
+    Aviso por Telegram (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID) con el mismo contenido
+    del correo. Independiente del correo: si falla, solo se registra. Sin las
+    variables no hace nada.
+    """
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    if not token or not chat:
+        return False
+    import httpx
+
+    mensaje = {"chat_id": chat, "text": texto[:4000], "parse_mode": "HTML",
+               "disable_web_page_preview": True}
+    if enlace:
+        mensaje["reply_markup"] = {"inline_keyboard": [[{"text": texto_boton, "url": enlace}]]}
+    try:
+        r = httpx.post(f"https://api.telegram.org/bot{token}/sendMessage", json=mensaje, timeout=15)
+        if not r.is_success:
+            logger.error("Telegram rechazó el aviso: %s %s", r.status_code, r.text[:300])
+        return r.is_success
+    except Exception:
+        logger.exception("No se pudo enviar el aviso por Telegram")
+        return False

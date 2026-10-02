@@ -37,6 +37,10 @@ services:
         sync: false            # remitente verificado en Brevo
       - key: EMAIL_FROM_NAME
         value: Motor de Horarios
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false            # bot de avisos del portafolio
+      - key: TELEGRAM_CHAT_ID
+        sync: false
       - key: CORREOS_COPIA
         sync: false            # copia oculta de cada reunion (correos separados por coma)
       - key: CORS_ORIGINS
