@@ -133,28 +133,27 @@ Para recrear la base: `.venv\Scripts\python local\crear_bd.py --reset`.
 | `SMTP_SECRET_OCID` | motor | secreto JSON en Vault con `host`, `port`, `user`, `password`, `from` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM` | motor | SMTP sin Vault (local) |
 
-## Infraestructura OCI (región sa-bogota-1)
+## Infraestructura en OCI
 
-La cuenta no tiene habilitados Functions, API Gateway ni Service/NAT Gateway, así
-que el despliegue real usa una VM con el mismo código:
+El despliegue usa una VM en Oracle Cloud con el mismo código:
 
 <p align="center">
   <img src="docs/arquitectura-oci-vm.svg" alt="Diagrama de arquitectura alternativa: VM Ampere A1 en subred pública con nginx, frontend, API y motor; MySQL HeatWave en subred privada y Vault para las credenciales" width="100%">
 </p>
 
-Scripts en `deploy/` (bash, OCI CLI). Los OCID quedan en `deploy/estado.env`;
-la clave del admin de MySQL en `deploy/.secretos` (no se sube a git).
+Scripts en `deploy/` (bash, OCI CLI). Los identificadores y claves que generan
+quedan en archivos locales que no se suben a git.
 
 | Script | Crea |
 |---|---|
-| `01_red.sh` | Subredes, rutas y reglas dentro de `PRPagos-vnc` (límite de 2 VCN) |
+| `01_red.sh` | Subredes, rutas y reglas de red |
 | `02_mysql.sh` | MySQL HeatWave |
 | `03_iam_vault.sh` | Dynamic group + política, Vault + llave |
-| `04_vm.sh` | VM A1 con reintentos por falta de capacidad; llave SSH en `~/.ssh/motor_horarios_oci` |
+| `04_vm.sh` | VM A1 con reintentos por falta de capacidad |
 | `05_desplegar.sh` | Sube el código, crea BD y secreto (primera vez) y reinicia servicios. Reejecutar para desplegar cambios |
-| `06_nlb_mysql.sh` | NLB que publica MySQL (3306) solo para `PERMITIR_IPS` (tu IP + IPs de salida de Render) |
+| `06_nlb_mysql.sh` | NLB que publica MySQL solo para las IPs permitidas (`PERMITIR_IPS`) |
 
 La arquitectura con OCI Functions + API Gateway (`functions/*/func.py`, `Dockerfile`,
-`func.yaml`) queda lista para cuando la cuenta pase a Pay As You Go.
+`func.yaml`) queda lista como alternativa.
 
 `Dockerfile` y `render.yaml` de la raíz son opcionales (API en Render, sin motor).
