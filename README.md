@@ -59,7 +59,7 @@ correo (SMTP) a cada persona seleccionada.
 | `db` | `001_esquema.sql` (tablas), `002_datos_demo.sql` (solo desarrollo) y `003_reglas_por_defecto.sql` (migración). |
 | `deploy` | Scripts de OCI (red, MySQL, Vault, NLB). |
 
-Render gratis se suspende tras 15 min sin tráfico: la primera petición tarda ~50 s.
+Render suspende el servicio tras 15 min sin tráfico: la primera petición tarda ~50 s.
 Las fechas se guardan sin zona horaria y se interpretan como hora de Bogotá.
 
 ## Frontend
@@ -133,10 +133,10 @@ Para recrear la base: `.venv\Scripts\python local\crear_bd.py --reset`.
 | `SMTP_SECRET_OCID` | motor | secreto JSON en Vault con `host`, `port`, `user`, `password`, `from` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM` | motor | SMTP sin Vault (local) |
 
-## Infraestructura OCI (cuenta Free Tier, región sa-bogota-1)
+## Infraestructura OCI (región sa-bogota-1)
 
-La cuenta Free Tier no permite Functions, API Gateway ni Service/NAT Gateway, así
-que el despliegue real usa una VM Always Free con el mismo código:
+La cuenta no tiene habilitados Functions, API Gateway ni Service/NAT Gateway, así
+que el despliegue real usa una VM con el mismo código:
 
 <p align="center">
   <img src="docs/arquitectura-oci-vm.svg" alt="Diagrama de arquitectura alternativa: VM Ampere A1 en subred pública con nginx, frontend, API y motor; MySQL HeatWave en subred privada y Vault para las credenciales" width="100%">
@@ -148,11 +148,11 @@ la clave del admin de MySQL en `deploy/.secretos` (no se sube a git).
 | Script | Crea |
 |---|---|
 | `01_red.sh` | Subredes, rutas y reglas dentro de `PRPagos-vnc` (límite de 2 VCN) |
-| `02_mysql.sh` | MySQL HeatWave `MySQL.Free` |
+| `02_mysql.sh` | MySQL HeatWave |
 | `03_iam_vault.sh` | Dynamic group + política, Vault + llave |
 | `04_vm.sh` | VM A1 con reintentos por falta de capacidad; llave SSH en `~/.ssh/motor_horarios_oci` |
 | `05_desplegar.sh` | Sube el código, crea BD y secreto (primera vez) y reinicia servicios. Reejecutar para desplegar cambios |
-| `06_nlb_mysql.sh` | NLB Always Free que publica MySQL (3306) solo para `PERMITIR_IPS` (tu IP + IPs de salida de Render) |
+| `06_nlb_mysql.sh` | NLB que publica MySQL (3306) solo para `PERMITIR_IPS` (tu IP + IPs de salida de Render) |
 
 La arquitectura con OCI Functions + API Gateway (`functions/*/func.py`, `Dockerfile`,
 `func.yaml`) queda lista para cuando la cuenta pase a Pay As You Go.
