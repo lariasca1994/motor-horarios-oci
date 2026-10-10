@@ -1,0 +1,408 @@
+/* Portada de acceso (ingresar y crear cuenta).
+   Identidad propia: azul petróleo MySQL con un toque ámbar; el motivo es
+   la semana de tres personas, sus bloques ocupados y una franja que
+   recorre la agenda hasta detenerse en el hueco donde todos pueden. */
+
+:root {
+  --m-acento: #00758F;
+  --m-acento-hover: #005F74;
+  --m-acento-suave: rgba(0, 117, 143, 0.13);
+  --m-enlace: #00758F;
+  --m-ambar: #F9B233;
+
+  --m-fondo: #F5F8F9;
+  --m-superficie: #FFFFFF;
+  --m-borde: #D9E3E7;
+  --m-texto: #13252B;
+  --m-suave: #566A72;
+
+  --m-marca-fondo: #E5F1F4;
+  --m-marca-texto: #0C2229;
+  --m-marca-suave: #4F6A73;
+  --m-agenda: #FFFFFF;
+  --m-celda: #EEF4F6;
+  --m-ocupado: #B9CBD2;
+  --m-sombra: 0 1px 2px rgba(12, 34, 41, 0.06), 0 18px 40px -22px rgba(12, 34, 41, 0.35);
+}
+
+[data-tema="oscuro"] {
+  --m-acento: #1A9BB8;
+  --m-acento-hover: #35B3CF;
+  --m-acento-suave: rgba(92, 198, 222, 0.16);
+  --m-enlace: #5CC6DE;
+
+  --m-fondo: #14161F;
+  --m-superficie: #1D2130;
+  --m-borde: #2C3145;
+  --m-texto: #E9EBF3;
+  --m-suave: #A3A9BD;
+
+  --m-marca-fondo: #0B1A1F;
+  --m-marca-texto: #E6F3F6;
+  --m-marca-suave: #8EADB6;
+  --m-agenda: #10252C;
+  --m-celda: #16313A;
+  --m-ocupado: #2F5560;
+  --m-sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 40px -22px rgba(0, 0, 0, 0.85);
+}
+
+body.acceso {
+  display: block;
+  background: var(--m-fondo);
+}
+
+.portada {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(420px, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* estilos.css limita y centra todo <main>; aquí ocupa su columna completa. */
+.acceso main.lado {
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+
+/* ───── Panel de marca ───── */
+.marca-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2rem clamp(1.75rem, 5vw, 4.5rem) 2.25rem;
+  background:
+    radial-gradient(60% 45% at 100% 0%, rgba(249, 178, 51, 0.18), transparent 70%),
+    var(--m-marca-fondo);
+  color: var(--m-marca-texto);
+}
+
+.marca-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.marca-logo img {
+  width: 2rem;
+  height: 2rem;
+}
+
+.marca-mensaje {
+  max-width: 34rem;
+}
+
+.marca-etiqueta {
+  margin: 0 0 0.9rem;
+  color: var(--m-enlace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.marca-titular {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 3.5vw, 2.9rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.marca-titular em {
+  color: var(--m-acento);
+  font-style: normal;
+}
+
+[data-tema="oscuro"] .marca-titular em {
+  color: var(--m-enlace);
+}
+
+.marca-bajada {
+  margin: 0;
+  color: var(--m-marca-suave);
+  line-height: 1.6;
+}
+
+/* Agenda de la semana */
+.agenda {
+  max-width: 34rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 0.9rem;
+  background: var(--m-agenda);
+  box-shadow: var(--m-sombra);
+  font-size: 0.72rem;
+}
+
+.agenda-fila {
+  display: grid;
+  grid-template-columns: 3.6rem repeat(5, minmax(0, 1fr));
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.agenda-fila:last-of-type {
+  margin-bottom: 0;
+}
+
+.agenda-dias span {
+  color: var(--m-marca-suave);
+  font-weight: 700;
+  text-align: center;
+}
+
+.persona {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.persona::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color, var(--m-acento));
+  content: "";
+}
+
+.celda {
+  height: 1.7rem;
+  border-radius: 0.35rem;
+  background: var(--m-celda);
+}
+
+.celda.ocupada {
+  background: repeating-linear-gradient(-45deg, var(--m-ocupado) 0 4px, transparent 4px 8px), var(--m-celda);
+}
+
+/* La franja recorre los días y se queda en el miércoles, el hueco común. */
+.semana {
+  position: relative;
+}
+
+.franja {
+  position: absolute;
+  top: -0.3rem;
+  bottom: -0.3rem;
+  left: calc(3.6rem + 0.35rem);
+  width: calc((100% - 3.6rem - 0.35rem * 5) / 5);
+  border: 2px solid var(--m-ambar);
+  border-radius: 0.5rem;
+  background: rgba(249, 178, 51, 0.12);
+  animation: buscar 6s ease-in-out infinite;
+}
+
+@keyframes buscar {
+  0%, 8% { transform: translateX(0); }
+  18%, 24% { transform: translateX(calc(100% + 0.35rem)); }
+  34%, 92% { transform: translateX(calc(200% + 0.7rem)); }
+  100% { transform: translateX(0); }
+}
+
+.propuesta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed var(--m-borde);
+  font-size: 0.8rem;
+}
+
+.propuesta strong {
+  color: var(--m-marca-texto);
+}
+
+.propuesta span:last-child {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(249, 178, 51, 0.2);
+  color: var(--m-marca-texto);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.marca-pie {
+  margin: 0;
+  color: var(--m-marca-suave);
+  font-size: 0.8rem;
+}
+
+/* ───── Lado del formulario ───── */
+.lado {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 5rem 1.5rem 3rem;
+}
+
+.lado-tema {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+}
+
+.tarjeta-acceso {
+  width: 100%;
+  max-width: 25rem;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border: 1px solid var(--m-borde);
+  border-radius: 1rem;
+  background: var(--m-superficie);
+  box-shadow: var(--m-sombra);
+}
+
+.tarjeta-paso {
+  margin: 0 0 0.4rem;
+  color: var(--m-enlace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tarjeta-titulo {
+  margin: 0 0 0.4rem;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+}
+
+.tarjeta-subtitulo {
+  margin: 0 0 1.25rem;
+  color: var(--m-suave);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.tarjeta-acceso label {
+  color: var(--m-texto);
+  font-weight: 600;
+}
+
+.tarjeta-acceso input {
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.6rem;
+}
+
+.tarjeta-acceso input:focus {
+  border-color: var(--m-acento);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--m-acento-suave);
+}
+
+.tarjeta-acceso .boton {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: 0.8rem 1rem;
+  border-radius: 0.6rem;
+  background: var(--m-acento);
+  font-weight: 700;
+}
+
+.tarjeta-acceso .boton:hover {
+  background: var(--m-acento-hover);
+}
+
+.tarjeta-acceso .aviso {
+  margin: 0 0 0.75rem;
+}
+
+.alterno {
+  margin: 1.25rem 0 0;
+  color: var(--m-suave);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.alterno a {
+  color: var(--m-enlace);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ───── Responsive: 1050 / 760 / 360, como el resto del portafolio ───── */
+@media (max-width: 1050px) {
+  .portada {
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 1fr);
+  }
+
+  .marca-bajada {
+    display: none;
+  }
+}
+
+@media (min-width: 761px) and (max-height: 640px) {
+  .agenda {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .portada {
+    position: relative;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .marca-panel {
+    gap: 1rem;
+    padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1.25rem 3.5rem;
+  }
+
+  .marca-bajada,
+  .agenda,
+  .marca-pie {
+    display: none;
+  }
+
+  .marca-titular {
+    margin: 0;
+    font-size: 1.7rem;
+  }
+
+  .lado {
+    position: static;
+    place-items: start center;
+    margin-top: -2rem;
+    padding: 0 1rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .lado-tema {
+    top: calc(1rem + env(safe-area-inset-top, 0px));
+    right: 1rem;
+  }
+
+  .tarjeta-acceso {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@media (max-width: 360px) {
+  .marca-panel {
+    padding-inline: 1rem;
+  }
+
+  .marca-titular {
+    font-size: 1.5rem;
+  }
+
+  .tarjeta-acceso {
+    padding: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .franja {
+    animation: none;
+    transform: translateX(calc(200% + 0.7rem));
+  }
+}

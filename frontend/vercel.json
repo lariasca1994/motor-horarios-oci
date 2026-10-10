@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/login" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

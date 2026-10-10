@@ -117,7 +117,7 @@ function pintarNav() {
         document.getElementById("salir").addEventListener("click", (e) => {
             e.preventDefault();
             sesion.cerrar();
-            irA("index.html");
+            irA("/");
         });
     }
 }

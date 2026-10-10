@@ -256,3 +256,22 @@ legend { font-size: 0.85rem; color: var(--texto-suave); padding: 0 0.25rem; }
 @media (max-width: 420px) {
     .fila-2 { grid-template-columns: 1fr; }
 }
+
+.marca { display: inline-flex; align-items: center; gap: 0.5rem; }
+.marca-icono { width: 1.75rem; height: 1.75rem; }
+
+/* ───── Responsive: tablet (1050), celular (760) y angosto (360) ───── */
+@media (max-width: 760px) {
+    .barra {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 0.75rem max(1rem, env(safe-area-inset-right)) 0.75rem max(1rem, env(safe-area-inset-left));
+    }
+    .nav-principal { width: 100%; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.9rem; }
+    main { padding: 1.25rem 1rem; }
+    .tarjeta-formulario { padding: 1.25rem; }
+}
+
+@media (max-width: 360px) {
+    main { padding-inline: 0.75rem; }
+}
