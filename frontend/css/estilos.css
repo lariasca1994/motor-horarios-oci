@@ -151,6 +151,22 @@ form .boton { margin-top: 1rem; }
 .aviso.ok { background: var(--aviso-ok-bg); border: 1px solid var(--aviso-ok-borde); }
 .aviso.info { background: var(--acento-suave); border: 1px solid var(--borde); }
 
+/* Pantalla de mantenimiento (comun.js → mostrarMantenimiento) */
+.mantenimiento { max-width: 540px; margin: 3rem auto; padding: 2.2rem 2rem; background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; box-shadow: 0 18px 40px -22px rgba(0, 117, 143, .35); }
+.mantenimiento h1 { margin: 0 0 .75rem; font-size: 1.45rem; }
+.mantenimiento p { color: var(--texto-suave); margin: 0 0 .75rem; }
+.mantenimiento .mantenimiento-etiqueta { margin: 0 0 .3rem; font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--acento-texto); }
+.mantenimiento ul { list-style: none; padding: 0; margin: 1rem 0 1.4rem; display: grid; gap: .5rem; }
+.mantenimiento li { display: flex; gap: .6rem; align-items: baseline; }
+.mantenimiento li::before { content: ""; flex: 0 0 8px; height: 8px; border-radius: 50%; background: var(--acento); }
+.mantenimiento-icono { display: flex; gap: 6px; align-items: flex-end; height: 40px; margin-bottom: 1.2rem; }
+.mantenimiento-icono span { width: 12px; border-radius: 4px; background: var(--acento); animation: mantenimiento-pulso 1.6s ease-in-out infinite; }
+.mantenimiento-icono span:nth-child(1) { height: 50%; }
+.mantenimiento-icono span:nth-child(2) { height: 100%; animation-delay: .2s; }
+.mantenimiento-icono span:nth-child(3) { height: 70%; animation-delay: .4s; }
+@keyframes mantenimiento-pulso { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .mantenimiento-icono span { animation: none; } }
+
 .cabecera-seccion { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
 .cabecera-seccion h1 { margin: 0; }
 

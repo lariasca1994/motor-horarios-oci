@@ -4,8 +4,9 @@ from datetime import datetime, timezone
 from typing import List
 
 import pymysql
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from auth import (bloqueado, crear_token, hash_clave, limpiar_fallos, registrar_fallo,
                   solo_admin, usuario_actual, verificar_clave)
@@ -31,6 +32,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(pymysql.err.OperationalError)
+@app.exception_handler(pymysql.err.InterfaceError)
+def base_no_disponible(_request: Request, error: Exception):
+    """MySQL apagado o inalcanzable: 503 con marca de mantenimiento (el frontend
+    muestra su pantalla de mantenimiento), no un 500 genérico."""
+    logging.getLogger(__name__).warning("BD no disponible: %s", type(error).__name__)
+    return JSONResponse(status_code=503, headers={"Retry-After": "300"},
+                        content={"detail": "servicio en mantenimiento", "mantenimiento": True})
 
 
 def _no_encontrado(que: str):
