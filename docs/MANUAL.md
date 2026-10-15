@@ -7,31 +7,81 @@ protege la plataforma. Para la parte técnica vuelve al [README](../README.md).
 
 ## Contenido
 
-1. [En pocas palabras](#1-en-pocas-palabras)
-2. [Antes de empezar](#2-antes-de-empezar)
-3. [Paso a paso](#3-paso-a-paso)
-4. [Qué información ingresas y dónde queda](#4-qué-información-ingresas-y-dónde-queda)
-5. [Seguridad: qué se garantiza](#5-seguridad-qué-se-garantiza)
-6. [Límites y recomendaciones](#6-límites-y-recomendaciones)
-7. [Preguntas frecuentes](#7-preguntas-frecuentes)
+1. [Proyecto: objetivos y alcances](#1-proyecto-objetivos-y-alcances)
+2. [Glosario](#2-glosario)
+3. [Plataformas, base de datos y servicios](#3-plataformas-base-de-datos-y-servicios)
+4. [Paso a paso](#4-paso-a-paso)
+5. [Seguridad: tu información protegida](#5-seguridad-tu-información-protegida)
+6. [Agradecimientos](#6-agradecimientos)
 
 ---
 
-## 1. En pocas palabras
+## 1. Proyecto: objetivos y alcances
+
+### Objetivo
 
 Cada persona registra una sola vez su horario laboral y sus bloques ocupados o preferidos. Al
 proponer una reunión, el motor cruza las agendas de los participantes y sugiere **los 3 mejores
 horarios** en que todos están libres. Cada participante recibe las sugerencias por correo.
 
-## 2. Antes de empezar
+### Alcance: qué necesitas y qué esperar
 
 - Solo necesitas un navegador.
 - El servidor se duerme sin uso: la primera carga puede tardar **unos 50 segundos**.
 - Las cuentas nuevas empiezan con horario de **8:00 a 18:00, de lunes a viernes**.
 
-## 3. Paso a paso
+### Límites
 
-### 3.1 Crear una cuenta
+Proyecto en desarrollo, pensado como demo de portafolio:
+
+- No hay recuperación de contraseña por correo: guárdala en un gestor.
+- El token vive en `localStorage`: usa **Salir** en equipos compartidos.
+- Tu nombre es visible para todas las cuentas activas; usa un nombre que no te moleste mostrar.
+
+## 2. Glosario
+
+Palabras técnicas que aparecen en este manual, explicadas en lenguaje simple.
+
+| Término | Qué significa |
+|---|---|
+| **Administrador** | Cuenta con permisos para gestionar usuarios y configuraciones de la aplicación. |
+| **API** | Puerta de entrada de un programa para que otros programas le pidan o le envíen datos. |
+| **Arranque en frío** | Los servidores gratuitos se apagan sin uso; la primera visita tarda unos segundos mientras vuelven a encenderse. |
+| **Base de datos** | Lugar donde la aplicación guarda la información de forma ordenada y permanente. |
+| **Captura de pantalla (evidencia)** | Imagen de lo que se veía en la pantalla, que sirve como prueba de lo que pasó. |
+| **Cifrado / TLS / HTTPS** | Protección que codifica la información mientras viaja, para que nadie en el camino pueda leerla. |
+| **Contraseña cifrada (hash)** | La contraseña no se guarda tal cual, sino como una "huella" de la que no se puede recuperar el texto original. |
+| **CORS** | Regla que impide que páginas ajenas usen la API de la aplicación desde el navegador. |
+| **Frontend** | La parte de la aplicación que ves y usas en el navegador. |
+| **localStorage** | Espacio del navegador donde la aplicación guarda datos pequeños en tu equipo (por ejemplo, el tema o la sesión). |
+| **Modo mantenimiento** | Pantalla que aparece cuando el servicio o su base de datos no responden; se recupera sola cuando vuelven. |
+| **Navegador** | Programa con el que abres páginas web: Chrome, Edge, Firefox, Safari. |
+| **Nube** | Servidores de una empresa (Amazon, Microsoft, Google, Oracle…) donde la aplicación funciona sin depender de un computador propio. |
+| **Rate limit (límite de intentos)** | Tope de intentos en poco tiempo, para frenar a quien intenta adivinar contraseñas. |
+| **Recurrencia (RRULE)** | Regla que indica cada cuánto se repite un evento (diario, semanal, días laborables…). |
+| **Rol** | Tipo de cuenta que define qué puede hacer cada persona (por ejemplo, usuario o administrador). |
+| **Servidor** | Computador en la nube que atiende las peticiones de la aplicación. |
+| **Sesión** | El tiempo en que la aplicación te reconoce después de iniciar sesión, sin pedirte la contraseña de nuevo. |
+| **Tema claro / oscuro** | Combinación de colores de la interfaz; puedes elegir la clara o la oscura. |
+| **Token** | Credencial temporal que la aplicación te entrega al iniciar sesión, en lugar de enviar tu contraseña en cada paso. |
+| **Variables de entorno / secretos** | Claves y contraseñas internas de la aplicación, guardadas fuera del código para que no queden expuestas. |
+
+## 3. Plataformas, base de datos y servicios
+
+Qué servicio de nube, base de datos o API usa el proyecto y para qué sirve cada uno.
+
+| Plataforma | Tipo | Qué hace en el proyecto |
+|---|---|---|
+| ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white) | Nube | Sirve el frontend estático (HTML, CSS y JavaScript). |
+| ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black) | Nube | Corre la API FastAPI y el motor de huecos en el mismo proceso. |
+| ![Oracle Cloud](https://img.shields.io/badge/Oracle_Cloud-C74634?style=for-the-badge&logo=oracle&logoColor=white) | Nube | Aloja la base en una subred privada, el Network Load Balancer que la publica de forma restringida, el Vault de credenciales y la VM alternativa. |
+| ![MySQL HeatWave](https://img.shields.io/badge/MySQL_HeatWave-4479A1?style=for-the-badge&logo=mysql&logoColor=white) | Base de datos | Guarda usuarios, reglas de horario, bloques de agenda, reuniones y sugerencias. |
+| ![Brevo](https://img.shields.io/badge/Brevo-0B996E?style=for-the-badge&logo=brevo&logoColor=white) | API / servicio externo | Envía a cada participante las sugerencias de sus reuniones. |
+| ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-181717?style=for-the-badge&logo=githubactions&logoColor=white) | Automatización | El flujo `.github/workflows/mantener-activo.yml` consulta `/health` cada 10 minutos para que Render no se suspenda. |
+
+## 4. Paso a paso
+
+### 4.1 Crear una cuenta
 
 ![Formulario de registro con sus campos numerados](img/manual/01-registro.png)
 
@@ -43,7 +93,7 @@ horarios** en que todos están libres. Cada participante recibe las sugerencias 
 | 4 | Confirmar contraseña | La misma contraseña | Debe coincidir con el campo 3 |
 | 5 | Crear cuenta | Botón | Crea la cuenta y te deja con la sesión iniciada |
 
-### 3.2 Iniciar sesión
+### 4.2 Iniciar sesión
 
 ![Formulario de inicio de sesión](img/manual/02-login.png)
 
@@ -55,7 +105,7 @@ horarios** en que todos están libres. Cada participante recibe las sugerencias 
 
 Tras **5 intentos fallidos en 15 minutos**, ese correo queda bloqueado temporalmente.
 
-### 3.3 Mi agenda
+### 4.3 Mi agenda
 
 ![Agenda con horario laboral y formulario de bloques](img/manual/03-agenda.png)
 
@@ -81,7 +131,7 @@ Tras **5 intentos fallidos en 15 minutos**, ese correo queda bloqueado temporalm
 | 11 | Repetir hasta | Opcional: fecha en que deja de repetirse |
 | 12 | Agregar bloque | Guarda el bloque y lo muestra en la tabla **Bloques de agenda** |
 
-### 3.4 Proponer una reunión
+### 4.4 Proponer una reunión
 
 ![Formulario para proponer una reunión](img/manual/04-reuniones.png)
 
@@ -98,7 +148,7 @@ A la derecha aparece la lista de tus reuniones (oculta en la captura para proteg
 otras cuentas). En cada tarjeta, el organizador puede **confirmar** un horario, **recalcular** las
 sugerencias o **cancelar** la reunión.
 
-### 3.5 Cambiar la contraseña
+### 4.5 Cambiar la contraseña
 
 ![Formulario de cambio de contraseña](img/manual/05-clave.png)
 
@@ -109,7 +159,25 @@ sugerencias o **cancelar** la reunión.
 | 3 | Confirmar | La nueva contraseña otra vez |
 | 4 | Guardar | Aplica el cambio |
 
-## 4. Qué información ingresas y dónde queda
+### 4.6 Preguntas frecuentes
+
+**¿Por qué el motor no encontró huecos?** No hay una franja de la duración pedida en la que todos
+estén dentro de su horario laboral y sin bloques ocupados. Amplía el rango de fechas o reduce la
+duración.
+
+**¿Qué diferencia hay entre Ocupado y Preferido?** *Ocupado* descarta esa franja. *Preferido* la
+hace más atractiva cuando hay varias opciones.
+
+**¿Los participantes tienen que aceptar en la aplicación?** No. Reciben las sugerencias por correo
+y el organizador confirma el horario desde la aplicación.
+
+**¿Qué significa la pantalla "Estamos en mantenimiento"?** El servicio o su base de datos no están respondiendo en ese momento. No se perdió nada: tus reuniones y tu agenda siguen guardados, y ninguna acción quedó a medias (si no viste la confirmación, no se guardó). La pantalla se actualiza sola y vuelve a la normalidad apenas el servicio responda; también puedes reintentar más tarde.
+
+## 5. Seguridad: tu información protegida
+
+Tu confianza es lo primero: la plataforma solo pide los datos necesarios para funcionar, los protege y no los comparte con terceros. Esto es lo que se guarda y cómo se protege.
+
+### Qué datos se guardan y dónde
 
 | Dato | Para qué se usa | Dónde se guarda | Quién lo ve |
 |---|---|---|---|
@@ -120,7 +188,7 @@ sugerencias o **cancelar** la reunión.
 | Reuniones | Coordinar | MySQL HeatWave | El organizador, los participantes y el administrador |
 | Sesión | Mantenerte conectado | `localStorage` de tu navegador | Solo tu navegador; vence a las 12 horas |
 
-## 5. Seguridad: qué se garantiza
+### Cómo se protege tu información
 
 Comprobado en el código del proyecto (`functions/api/auth.py`, `functions/api/main.py`,
 `functions/api/db.py`):
@@ -140,24 +208,8 @@ Comprobado en el código del proyecto (`functions/api/auth.py`, `functions/api/m
 - **CORS restringido** a la web oficial y secretos (base, clave de firma, SMTP) en variables de
   entorno, nunca en el repositorio.
 
-## 6. Límites y recomendaciones
+## 6. Agradecimientos
 
-Proyecto en desarrollo, pensado como demo de portafolio:
+A mi familia, por su apoyo incondicional, su paciencia y por creer en cada proyecto incluso cuando apenas era una idea. Este trabajo también es de ustedes.
 
-- No hay recuperación de contraseña por correo: guárdala en un gestor.
-- El token vive en `localStorage`: usa **Salir** en equipos compartidos.
-- Tu nombre es visible para todas las cuentas activas; usa un nombre que no te moleste mostrar.
-
-## 7. Preguntas frecuentes
-
-**¿Por qué el motor no encontró huecos?** No hay una franja de la duración pedida en la que todos
-estén dentro de su horario laboral y sin bloques ocupados. Amplía el rango de fechas o reduce la
-duración.
-
-**¿Qué diferencia hay entre Ocupado y Preferido?** *Ocupado* descarta esa franja. *Preferido* la
-hace más atractiva cuando hay varias opciones.
-
-**¿Los participantes tienen que aceptar en la aplicación?** No. Reciben las sugerencias por correo
-y el organizador confirma el horario desde la aplicación.
-
-**¿Qué significa la pantalla "Estamos en mantenimiento"?** El servicio o su base de datos no están respondiendo en ese momento. No se perdió nada: tus reuniones y tu agenda siguen guardados, y ninguna acción quedó a medias (si no viste la confirmación, no se guardó). La pantalla se actualiza sola y vuelve a la normalidad apenas el servicio responda; también puedes reintentar más tarde.
+Y a ti, que usas esta plataforma: cada prueba, comentario y sugerencia ayuda a que siga mejorando.
