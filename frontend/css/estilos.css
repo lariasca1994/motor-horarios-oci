@@ -291,3 +291,6 @@ legend { font-size: 0.85rem; color: var(--texto-suave); padding: 0 0.25rem; }
 @media (max-width: 360px) {
     main { padding-inline: 0.75rem; }
 }
+
+/* El contenido se oculta (no se borra) mientras se muestra el mantenimiento. */
+main > [hidden] { display: none !important; }
