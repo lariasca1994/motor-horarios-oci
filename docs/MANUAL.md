@@ -159,3 +159,5 @@ hace más atractiva cuando hay varias opciones.
 
 **¿Los participantes tienen que aceptar en la aplicación?** No. Reciben las sugerencias por correo
 y el organizador confirma el horario desde la aplicación.
+
+**¿Qué significa la pantalla "Estamos en mantenimiento"?** El servicio o su base de datos no están respondiendo en ese momento. No se perdió nada: tus reuniones y tu agenda siguen guardados, y ninguna acción quedó a medias (si no viste la confirmación, no se guardó). La pantalla se actualiza sola y vuelve a la normalidad apenas el servicio responda; también puedes reintentar más tarde.

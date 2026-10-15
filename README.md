@@ -205,6 +205,14 @@ En **Mi agenda**:
 En **Cambiar contraseña**, escribe la **Contraseña actual**, la **Nueva contraseña
 (mínimo 10 caracteres)** y su confirmación, y pulsa **Guardar**.
 
+### Si el servicio no responde
+
+Si la API o la base de datos (MySQL HeatWave en Oracle Cloud) no responden, la aplicación muestra una **pantalla de mantenimiento** con los colores del proyecto, en lugar de un error genérico o de una página que no carga.
+
+- **Servidor:** La API responde **503** si MySQL no responde (`pymysql` `OperationalError`/`InterfaceError`).
+- **Pantalla:** `frontend/js/comun.js` (`mostrarMantenimiento`): sin conexión con la API de Render, o con 502/503/504, oculta el contenido y muestra la pantalla.
+- **Recuperación:** Consulta `/health` cada 15 s y recarga la página sola cuando la API vuelve. No reintenta acciones del usuario, para no duplicarlas.
+
 ---
 
 ## 6. Instalación para pruebas
