@@ -1,11 +1,14 @@
 # Render (plan gratuito) suspende el servicio tras 15 min sin tráfico y la siguiente
-# visita tarda ~50 s. Este flujo lo consulta cada 10 min para mantenerlo despierto.
+# visita tarda ~50 s. Este flujo lo consulta cada 10 min, solo de lunes a viernes de
+# 7:00 a 19:00 (Bogotá), para mantenerlo despierto en horario laboral.
+# Las 750 h gratis al mes de Render se comparten entre todos los servicios del espacio:
+# despierto 24/7 gastaría ~720 h; en este horario gasta ~265 h y fuera de él duerme.
 # Nota: GitHub pausa los flujos programados tras 60 días sin actividad en el repo.
 name: Mantener API activa
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/10 12-23 * * 1-5" # 7:00 a 18:50 Bogotá (UTC-5), lunes a viernes
   workflow_dispatch:
 
 permissions: {}
