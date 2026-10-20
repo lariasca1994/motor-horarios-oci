@@ -19,4 +19,4 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: Consultar /health
-        run: curl --fail --silent --show-error --max-time 90 --retry 2 https://motor-horarios-oci-1.onrender.com/health
+        run: curl --fail --silent --show-error --max-time 90 --retry 2 https://motor-horarios-api.onrender.com/health
