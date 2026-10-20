@@ -8,6 +8,7 @@ DB_MODE=vault (OCI, por defecto) -> secreto JSON en OCI Vault (DB_SECRET_OCID).
                                     Siempre usa TLS; con "ssl_ca" además verifica el servidor.
 """
 import os
+import queue
 import ssl as ssl_lib
 import tempfile
 from contextlib import contextmanager
@@ -87,10 +88,53 @@ def get_connection() -> pymysql.connections.Connection:
     )
 
 
+# Pool pequeño de conexiones: abrir una conexión TLS a MySQL cuesta varios viajes
+# de ida y vuelta hasta la base. Las conexiones libres se reutilizan (se verifican
+# con ping antes de entregarlas) y al devolverlas se deshace cualquier transacción
+# que haya quedado abierta, igual que si se hubiera cerrado.
+POOL_MAX_LIBRES = 4
+_libres: "queue.LifoQueue[pymysql.connections.Connection]" = queue.LifoQueue(maxsize=POOL_MAX_LIBRES)
+
+
+def _tomar() -> pymysql.connections.Connection:
+    while True:
+        try:
+            conn = _libres.get_nowait()
+        except queue.Empty:
+            return get_connection()
+        try:
+            conn.ping(reconnect=False)
+            return conn
+        except pymysql.Error:
+            _cerrar(conn)
+
+
+def _devolver(conn: pymysql.connections.Connection) -> None:
+    try:
+        conn.rollback()
+        _libres.put_nowait(conn)
+    except (pymysql.Error, queue.Full):
+        _cerrar(conn)
+
+
+def _cerrar(conn: pymysql.connections.Connection) -> None:
+    try:
+        conn.close()
+    except pymysql.Error:
+        pass
+
+
 @contextmanager
 def conexion():
-    conn = get_connection()
+    conn = _tomar()
+    sana = True
     try:
         yield conn
+    except pymysql.err.OperationalError:
+        sana = False  # conexión caída a mitad de la consulta: no se reutiliza
+        raise
     finally:
-        conn.close()
+        if sana:
+            _devolver(conn)
+        else:
+            _cerrar(conn)
