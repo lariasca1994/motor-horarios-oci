@@ -168,7 +168,7 @@ def recuperar_cuenta(datos: Recuperar):
                     (email,))
         u = cur.fetchone()
     if u and u["activo"]:
-        enlace = f"{_url_frontend()}/restablecer.html#{crear_token_recuperacion(u['id'], u['password_hash'])}"
+        enlace = f"{_url_frontend()}/restablecer#{crear_token_recuperacion(u['id'], u['password_hash'])}"
         try:
             from notificaciones import enviar_correos
             enviar_correos([(u["nombre"], u["email"])], "Restablece tu contraseña · Motor de Horarios",
