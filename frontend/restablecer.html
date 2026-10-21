@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Nueva contraseña — Motor de Horarios</title>
+    <link rel="icon" href="iconos/icono.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
+    <meta name="theme-color" content="#00758F">
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/tema.js"></script>
+</head>
+<body>
+    <header class="barra">
+        <span class="marca-grupo">
+            <a class="marca" href="/"><img src="iconos/icono.svg" alt="" class="marca-icono">Motor de Horarios</a>
+            <button type="button" id="alternar-tema" class="boton-tema"
+                    aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">🌓</button>
+        </span>
+        <nav class="nav-principal" id="nav"></nav>
+    </header>
+    <main>
+        <section class="tarjeta-formulario">
+            <h1>Crea una nueva contraseña</h1>
+            <p class="aviso" id="aviso" hidden></p>
+            <form id="form-restablecer">
+                <label for="nueva">Nueva contraseña (mínimo 10 caracteres)</label>
+                <input type="password" id="nueva" name="nueva" minlength="10" maxlength="128" autocomplete="new-password" required>
+
+                <label for="confirmar">Confirmar nueva contraseña</label>
+                <input type="password" id="confirmar" name="confirmar" minlength="10" maxlength="128" autocomplete="new-password" required>
+
+                <button type="submit" class="boton">Guardar contraseña</button>
+            </form>
+            <p class="alterno"><a href="login.html">Volver a ingresar</a></p>
+        </section>
+    </main>
+    <footer class="pie">
+        <p>Motor de Horarios &mdash; proyecto de portafolio de Luis Felipe Arias.</p>
+    </footer>
+    <script src="js/config.js"></script>
+    <script src="js/comun.js"></script>
+    <script src="js/restablecer.js"></script>
+</body>
+</html>

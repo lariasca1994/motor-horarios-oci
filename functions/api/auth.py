@@ -80,6 +80,44 @@ def leer_token(token: str) -> int | None:
         return None
 
 
+# ---------------------------------------------------------------- recuperación de cuenta
+
+_TTL_RECUPERAR = 30 * 60
+
+
+def _huella(password_hash: str) -> str:
+    """Huella de la contraseña actual: al cambiarla, cualquier enlace anterior deja de servir."""
+    return hashlib.sha256((password_hash or "").encode()).hexdigest()[:24]
+
+
+def crear_token_recuperacion(usuario_id: int, password_hash: str) -> str:
+    """Enlace de "Olvidé mi contraseña": firmado, vence en 30 min y es de un solo uso
+    (lleva la huella de la contraseña actual; no hace falta guardar nada en la base)."""
+    cuerpo = _b64e(json.dumps({"sub": usuario_id, "exp": int(time.time()) + _TTL_RECUPERAR,
+                               "tipo": "recuperar", "h": _huella(password_hash)}).encode())
+    firma = _b64e(hmac.new(_SECRETO.encode(), cuerpo.encode(), hashlib.sha256).digest())
+    return f"{cuerpo}.{firma}"
+
+
+def leer_token_recuperacion(token: str) -> tuple[int, str] | None:
+    """(usuario_id, huella) si la firma es válida y no venció; si no, None."""
+    try:
+        cuerpo, firma = token.split(".")
+        esperada = _b64e(hmac.new(_SECRETO.encode(), cuerpo.encode(), hashlib.sha256).digest())
+        if not hmac.compare_digest(firma, esperada):
+            return None
+        datos = json.loads(_b64d(cuerpo))
+        if datos.get("tipo") != "recuperar" or datos["exp"] <= time.time():
+            return None
+        return int(datos["sub"]), str(datos["h"])
+    except (ValueError, KeyError, TypeError):
+        return None
+
+
+def huella_coincide(password_hash: str, huella: str) -> bool:
+    return hmac.compare_digest(_huella(password_hash), huella)
+
+
 # ---------------------------------------------------------------- freno a fuerza bruta
 
 _INTENTOS: dict[str, list[float]] = {}

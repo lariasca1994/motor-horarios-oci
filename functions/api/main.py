@@ -1,5 +1,7 @@
 import logging
 import os
+import threading
+import time
 from datetime import datetime, timezone
 from typing import List
 
@@ -8,12 +10,13 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from auth import (bloqueado, crear_token, hash_clave, limpiar_fallos, registrar_fallo,
-                  solo_admin, usuario_actual, verificar_clave)
+from auth import (bloqueado, crear_token, crear_token_recuperacion, hash_clave, huella_coincide,
+                  leer_token_recuperacion, limpiar_fallos, registrar_fallo, solo_admin,
+                  usuario_actual, verificar_clave)
 from db import conexion, modo_bd
 from modelos import (
-    CambioClave, Confirmacion, Disponibilidad, DisponibilidadIn, Login, Reglas, Reunion,
-    ReunionIn, Sesion, Sugerencia, Usuario, UsuarioCambios, UsuarioIn,
+    CambioClave, Confirmacion, Disponibilidad, DisponibilidadIn, Login, Recuperar, Reglas,
+    Restablecer, Reunion, ReunionIn, Sesion, Sugerencia, Usuario, UsuarioCambios, UsuarioIn,
 )
 from motor_cliente import disparar_motor
 
@@ -117,6 +120,80 @@ def cambiar_clave(datos: CambioClave, u: dict = Depends(usuario_actual)):
         cur.execute("UPDATE usuarios SET password_hash = %s WHERE id = %s",
                     (hash_clave(datos.nueva), u["id"]))
         conn.commit()
+
+
+# ---------------------------------------------------------------- recuperación de cuenta
+
+_RECUPERAR_ENVIOS: dict[str, list[float]] = {}
+_RECUPERAR_LOCK = threading.Lock()
+
+
+def _url_frontend() -> str:
+    """Primera URL de CORS_ORIGINS (el frontend publicado), sin "/" final."""
+    for origen in os.environ.get("CORS_ORIGINS", "").split(","):
+        origen = origen.strip().strip("\"'").strip().rstrip("/")
+        if origen.startswith("https://"):
+            return origen
+    return "http://localhost:5500"
+
+
+def _correo_recuperacion(nombre: str, enlace: str):
+    texto = (f"Hola {nombre},\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta "
+             f"en Motor de Horarios. Crea una nueva aquí (el enlace vence en 30 minutos y sirve una vez):\n\n"
+             f"{enlace}\n\nSi no fuiste tú, ignora este correo: tu contraseña no cambia.")
+    html = (f"<p>Hola {nombre},</p><p>Recibimos una solicitud para restablecer la contraseña de tu "
+            f"cuenta en <strong>Motor de Horarios</strong>.</p>"
+            f'<p><a href="{enlace}" style="background:#00758F;color:#fff;padding:10px 18px;'
+            f'border-radius:6px;text-decoration:none">Crear contraseña nueva</a></p>'
+            f"<p>El enlace vence en 30 minutos y sirve una sola vez. Si no fuiste tú, ignora este "
+            f"correo: tu contraseña no cambia.</p>")
+    return texto, html
+
+
+@app.post("/auth/recuperar", status_code=202)
+def recuperar_cuenta(datos: Recuperar):
+    """Envía el enlace para crear una contraseña nueva. Responde igual exista o no la cuenta
+    (no revela qué correos están registrados) y comparte el freno a fuerza bruta del login."""
+    email = datos.email.lower()
+    respuesta = {"detail": "si el correo pertenece a una cuenta, te enviamos un enlace"}
+    # Límite propio (no el del login): pedir enlaces no debe bloquear el ingreso de nadie.
+    ahora = time.time()
+    with _RECUPERAR_LOCK:
+        recientes = [t for t in _RECUPERAR_ENVIOS.get(email, []) if ahora - t < 15 * 60]
+        if len(recientes) >= 3:
+            return respuesta
+        _RECUPERAR_ENVIOS[email] = recientes + [ahora]
+    with conexion() as conn, conn.cursor() as cur:
+        cur.execute("SELECT id, nombre, email, activo, password_hash FROM usuarios WHERE email = %s",
+                    (email,))
+        u = cur.fetchone()
+    if u and u["activo"]:
+        enlace = f"{_url_frontend()}/restablecer.html#{crear_token_recuperacion(u['id'], u['password_hash'])}"
+        try:
+            from notificaciones import enviar_correos
+            enviar_correos([(u["nombre"], u["email"])], "Restablece tu contraseña · Motor de Horarios",
+                           lambda nombre: _correo_recuperacion(nombre, enlace))
+        except Exception:  # el correo no debe revelar nada distinto al cliente
+            logging.exception("No se pudo enviar el correo de recuperación")
+    return respuesta
+
+
+@app.post("/auth/restablecer", status_code=204)
+def restablecer_clave(datos: Restablecer):
+    leido = leer_token_recuperacion(datos.token)
+    invalido = HTTPException(status_code=400, detail="el enlace no es válido o ya venció; pide uno nuevo")
+    if not leido:
+        raise invalido
+    usuario_id, huella = leido
+    with conexion() as conn, conn.cursor() as cur:
+        cur.execute("SELECT email, activo, password_hash FROM usuarios WHERE id = %s", (usuario_id,))
+        u = cur.fetchone()
+        if not u or not u["activo"] or not huella_coincide(u["password_hash"], huella):
+            raise invalido
+        cur.execute("UPDATE usuarios SET password_hash = %s WHERE id = %s",
+                    (hash_clave(datos.nueva), usuario_id))
+        conn.commit()
+    limpiar_fallos(u["email"])
 
 
 # ---------------------------------------------------------------- personas

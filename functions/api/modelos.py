@@ -44,6 +44,15 @@ class CambioClave(BaseModel):
     nueva: str = Field(min_length=10, max_length=128)
 
 
+class Recuperar(BaseModel):
+    email: EmailStr
+
+
+class Restablecer(BaseModel):
+    token: str = Field(min_length=10, max_length=600)
+    nueva: str = Field(min_length=10, max_length=128)
+
+
 class Reglas(BaseModel):
     no_antes_de: Optional[int] = Field(default=None, ge=0, le=23)
     no_despues_de: Optional[int] = Field(default=None, ge=1, le=24)

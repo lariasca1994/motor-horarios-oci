@@ -159,6 +159,13 @@ sugerencias o **cancelar** la reunión.
 | 3 | Confirmar | La nueva contraseña otra vez |
 | 4 | Guardar | Aplica el cambio |
 
+### 4.5.1 Olvidé mi contraseña
+
+En la pantalla de ingreso, pulsa **¿Olvidaste tu contraseña?** y escribe tu correo. Si la cuenta existe y
+está activa, te llega un correo con un enlace para crear una contraseña nueva (mínimo 10 caracteres).
+El enlace vence en 30 minutos y sirve una sola vez: deja de funcionar en cuanto la contraseña cambia.
+Por seguridad, la pantalla muestra el mismo mensaje exista o no la cuenta.
+
 ### 4.6 Preguntas frecuentes
 
 **¿Por qué el motor no encontró huecos?** No hay una franja de la duración pedida en la que todos
