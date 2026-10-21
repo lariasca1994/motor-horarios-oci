@@ -162,6 +162,8 @@ La arquitectura con OCI Functions + API Gateway (`functions/*/func.py`, `Dockerf
 
 1. Pulsa **Ya tengo cuenta**, escribe **Correo** y **Contraseña** y pulsa **Ingresar**.
 2. La sesión dura 12 horas.
+3. ¿La olvidaste? Pulsa **¿Olvidaste tu contraseña?** y escribe tu correo: si la cuenta existe,
+   llega un enlace (API de Brevo) que vence en 30 minutos y sirve una sola vez.
 
 ### 5.3 Llenar tu agenda
 
