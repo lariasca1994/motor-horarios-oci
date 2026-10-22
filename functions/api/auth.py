@@ -75,9 +75,44 @@ def leer_token(token: str) -> int | None:
         if not hmac.compare_digest(firma, esperada):
             return None
         datos = json.loads(_b64d(cuerpo))
+        # Solo tokens de sesión: los de recuperación y el pase de la verificación en dos
+        # pasos llevan "tipo" y no sirven para entrar.
+        if "tipo" in datos:
+            return None
         return int(datos["sub"]) if datos["exp"] > time.time() else None
     except (ValueError, KeyError, TypeError):
         return None
+
+
+# ---------------------------------------------------------------- verificación en dos pasos
+
+_TTL_PASE = 10 * 60
+
+
+def crear_pase_mfa(usuario_id: int) -> str:
+    """Pase de 10 minutos entre la contraseña y el código del segundo paso."""
+    cuerpo = _b64e(json.dumps({"sub": usuario_id, "exp": int(time.time()) + _TTL_PASE, "tipo": "mfa"}).encode())
+    firma = _b64e(hmac.new(_SECRETO.encode(), cuerpo.encode(), hashlib.sha256).digest())
+    return f"{cuerpo}.{firma}"
+
+
+def leer_pase_mfa(token: str | None) -> int | None:
+    try:
+        cuerpo, firma = (token or "").split(".")
+        esperada = _b64e(hmac.new(_SECRETO.encode(), cuerpo.encode(), hashlib.sha256).digest())
+        if not hmac.compare_digest(firma, esperada):
+            return None
+        datos = json.loads(_b64d(cuerpo))
+        if datos.get("tipo") != "mfa" or datos["exp"] <= time.time():
+            return None
+        return int(datos["sub"])
+    except (ValueError, KeyError, TypeError):
+        return None
+
+
+def secreto_mfa() -> bytes:
+    """Clave para cifrar la verificación en dos pasos (derivada en mfa.py)."""
+    return _SECRETO.encode()
 
 
 # ---------------------------------------------------------------- recuperación de cuenta

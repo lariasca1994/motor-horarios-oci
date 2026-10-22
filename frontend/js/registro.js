@@ -13,7 +13,7 @@
         const boton = e.target.querySelector("button");
         boton.disabled = true;
         try {
-            const s = await api("/auth/registro", {
+            const paso = await api("/auth/registro", {
                 method: "POST",
                 body: JSON.stringify({
                     nombre: form.get("nombre").trim(),
@@ -21,8 +21,9 @@
                     clave: form.get("clave"),
                 }),
             });
-            sesion.guardar(s);
-            irA("agenda.html?bienvenida=1");
+            // Antes de entrar, la cuenta elige su verificación en dos pasos.
+            mfa.guardar({ ...paso, volver: "agenda.html?bienvenida=1" });
+            irA("verificacion.html");
         } catch (err) {
             aviso(avisoEl, err.message);
             boton.disabled = false;

@@ -20,6 +20,20 @@ const sesion = {
     get token() { return this.leer()?.token || null; },
 };
 
+// Paso intermedio del ingreso (verificación en dos pasos): solo dura la pestaña.
+const CLAVE_MFA = "motorhorarios-mfa";
+const mfa = {
+    leer() {
+        try { return JSON.parse(sessionStorage.getItem(CLAVE_MFA)) || null; } catch { return null; }
+    },
+    guardar(datos) {
+        try { sessionStorage.setItem(CLAVE_MFA, JSON.stringify(datos)); } catch { /* sin storage */ }
+    },
+    limpiar() {
+        try { sessionStorage.removeItem(CLAVE_MFA); } catch { /* sin storage */ }
+    },
+};
+
 function irA(pagina) {
     location.href = pagina;
 }
@@ -150,6 +164,7 @@ function pintarNav() {
             ["agenda.html", "Mi agenda"],
             ...(u.rol === "admin" ? [["usuarios.html", "Usuarios"]] : []),
             ["clave.html", "Contraseña"],
+            ["seguridad.html", "Seguridad"],
         ]
         : [["login.html", "Ingresar"], ["registro.html", "Registrarme"]];
     const actual = location.pathname.split("/").pop().replace(/\.html$/, "") || "index";

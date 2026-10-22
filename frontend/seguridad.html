@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Seguridad — Motor de Horarios</title>
+    <link rel="icon" href="iconos/icono.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
+    <meta name="theme-color" content="#00758F">
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="js/tema.js"></script>
+</head>
+<body>
+    <header class="barra">
+        <span class="marca-grupo">
+            <a class="marca" href="/"><img src="iconos/icono.svg" alt="" class="marca-icono">Motor de Horarios</a>
+            <button type="button" id="alternar-tema" class="boton-tema"
+                    aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">🌓</button>
+        </span>
+        <nav class="nav-principal" id="nav"></nav>
+    </header>
+    <main>
+        <section class="tarjeta-formulario">
+            <h1>Verificación en dos pasos</h1>
+            <p>Cada ingreso pide, además de la contraseña, un código de uno de tus métodos.</p>
+            <p class="aviso" id="aviso" hidden></p>
+            <ul class="mfa-metodos" id="metodos"></ul>
+            <div id="agregar" hidden>
+                <h2 id="agregar-titulo"></h2>
+                <div id="agregar-qr" hidden>
+                    <p class="ayuda-mfa">1. Escanea este código con tu app autenticadora.</p>
+                    <div class="mfa-qr" id="qr-imagen"></div>
+                    <p class="ayuda-mfa">¿No puedes escanear? Escribe esta clave: <code class="mfa-clave" id="qr-clave"></code></p>
+                    <p class="ayuda-mfa">2. Escribe el código de 6 dígitos que muestra la app.</p>
+                </div>
+                <p class="ayuda-mfa" id="agregar-correo" hidden></p>
+                <form id="form-activar">
+                    <label for="codigo">Código de 6 dígitos</label>
+                    <input type="text" id="codigo" name="codigo" required inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" autocomplete="one-time-code">
+                    <button type="submit" class="boton">Activar</button>
+                </form>
+            </div>
+        </section>
+    </main>
+    <footer class="pie">
+        <p>Motor de Horarios &mdash; proyecto de portafolio de Luis Felipe Arias.</p>
+    </footer>
+    <script src="js/config.js"></script>
+    <script src="js/comun.js"></script>
+    <script src="js/seguridad.js"></script>
+</body>
+</html>

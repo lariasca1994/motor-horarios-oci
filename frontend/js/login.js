@@ -11,14 +11,15 @@
         const boton = e.target.querySelector("button");
         boton.disabled = true;
         try {
-            const s = await api("/auth/login", {
+            const paso = await api("/auth/login", {
                 method: "POST",
                 body: JSON.stringify({ email: form.get("email").trim(), clave: form.get("clave") }),
             });
-            sesion.guardar(s);
-            // Solo se vuelve a páginas propias (evita redirecciones abiertas)
+            // La sesión llega tras el segundo paso. Solo se vuelve a páginas propias
+            // (evita redirecciones abiertas).
             const volver = params.get("volver");
-            irA(volver && /^[a-z]+\.html(\?[\w=&%-]*)?$/.test(volver) ? volver : "reuniones.html");
+            mfa.guardar({ ...paso, volver: volver && /^[a-z]+\.html(\?[\w=&%-]*)?$/.test(volver) ? volver : "reuniones.html" });
+            irA("verificacion.html");
         } catch (err) {
             aviso(avisoEl, err.message);
             boton.disabled = false;

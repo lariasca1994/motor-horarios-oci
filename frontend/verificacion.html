@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Verificación en dos pasos — Motor de Horarios</title>
+    <link rel="icon" href="iconos/icono.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
+    <meta name="theme-color" content="#00758F">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/acceso.css">
+    <script src="js/tema.js"></script>
+</head>
+<!-- Segundo paso del ingreso: misma portada que login.html. -->
+<body class="acceso">
+    <div class="portada">
+        <aside class="marca-panel">
+            <a class="marca-logo" href="/"><img src="iconos/icono.svg" alt="">Motor de Horarios</a>
+
+            <div class="marca-mensaje">
+                <p class="marca-etiqueta">Coordinación de reuniones</p>
+                <h2 class="marca-titular">Todos libres, <em>a la misma hora.</em></h2>
+                <p class="marca-bajada">
+                    Cada persona registra su agenda y sus reglas de horario; el
+                    motor propone los mejores huecos comunes y avisa por correo a
+                    cada participante. Sin cadenas de correos.
+                </p>
+            </div>
+
+            <div class="agenda" aria-hidden="true">
+                <div class="semana">
+                <div class="agenda-fila agenda-dias"><span></span><span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span></div>
+                <div class="agenda-fila"><span class="persona" style="--color:#00758F">Ana</span><i class="celda ocupada"></i><i class="celda"></i><i class="celda"></i><i class="celda ocupada"></i><i class="celda"></i></div>
+                <div class="agenda-fila"><span class="persona" style="--color:#F9B233">Luis</span><i class="celda"></i><i class="celda ocupada"></i><i class="celda"></i><i class="celda"></i><i class="celda ocupada"></i></div>
+                <div class="agenda-fila"><span class="persona" style="--color:#8E6CD8">Sofía</span><i class="celda ocupada"></i><i class="celda ocupada"></i><i class="celda"></i><i class="celda ocupada"></i><i class="celda"></i></div>
+                <div class="franja"></div>
+                </div>
+                <div class="propuesta"><span><strong>Mejor hueco:</strong> miércoles 10:00 – 11:00</span><span>3 de 3 pueden</span></div>
+            </div>
+
+            <p class="marca-pie">Proyecto de portafolio · FastAPI · MySQL HeatWave · Oracle Cloud</p>
+        </aside>
+
+        <main class="lado">
+            <div class="lado-tema">
+                <button type="button" id="alternar-tema" class="boton-tema"
+                        aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">🌓</button>
+            </div>
+            <section class="tarjeta-acceso" aria-labelledby="titulo-acceso">
+                <p class="tarjeta-paso">Un paso más</p>
+                <h1 id="titulo-acceso" class="tarjeta-titulo">Verificación en dos pasos</h1>
+                <p class="tarjeta-subtitulo" id="subtitulo">Cargando…</p>
+                <p class="aviso error" id="aviso" hidden></p>
+
+                <div id="elegir" hidden>
+                    <button type="button" class="boton" data-metodo="totp">App autenticadora (recomendado)</button>
+                    <p class="ayuda-mfa">Google Authenticator, Microsoft Authenticator u otra: funciona sin internet.</p>
+                    <button type="button" class="boton" data-metodo="correo">Código por correo</button>
+                    <p class="ayuda-mfa">Te enviamos un código de 6 dígitos cada vez que ingreses.</p>
+                </div>
+
+                <div id="qr" hidden>
+                    <p class="ayuda-mfa">1. Escanea este código con tu app autenticadora.</p>
+                    <div class="mfa-qr" id="qr-imagen" aria-label="Código QR para la app autenticadora"></div>
+                    <p class="ayuda-mfa">¿No puedes escanear? Escribe esta clave: <code class="mfa-clave" id="qr-clave"></code></p>
+                    <p class="ayuda-mfa">2. Escribe el código de 6 dígitos que muestra la app.</p>
+                </div>
+
+                <form id="form-codigo" hidden>
+                    <label for="codigo">Código de 6 dígitos</label>
+                    <input type="text" id="codigo" name="codigo" required inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" autocomplete="one-time-code">
+                    <button type="submit" class="boton" id="boton-codigo">Verificar</button>
+                </form>
+                <p class="alterno" id="otros" hidden></p>
+                <p class="alterno"><a href="login.html">Volver a iniciar sesión</a></p>
+            </section>
+        </main>
+    </div>
+    <script src="js/config.js"></script>
+    <script src="js/comun.js"></script>
+    <script src="js/verificacion.js"></script>
+</body>
+</html>

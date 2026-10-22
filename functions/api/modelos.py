@@ -39,6 +39,34 @@ class Sesion(BaseModel):
     usuario: Usuario
 
 
+class PasoMfa(BaseModel):
+    """Respuesta del login y del registro: la sesión llega solo tras el segundo paso."""
+    paso: Literal["mfa"] = "mfa"
+    pase: str
+    configurado: bool
+    metodo: Optional[str] = None
+    activos: List[str] = Field(default_factory=list)
+    email: str
+
+
+class MfaPase(BaseModel):
+    pase: str = Field(min_length=10, max_length=600)
+
+
+class MfaMetodo(BaseModel):
+    pase: Optional[str] = Field(default=None, max_length=600)
+    metodo: Literal["totp", "correo"]
+
+
+class MfaCodigo(MfaMetodo):
+    codigo: str = Field(min_length=6, max_length=8)
+
+
+class EstadoMfa(BaseModel):
+    activos: List[str]
+    preferido: Optional[str] = None
+
+
 class CambioClave(BaseModel):
     actual: str = Field(min_length=1, max_length=128)
     nueva: str = Field(min_length=10, max_length=128)

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     rol           ENUM('admin', 'usuario') NOT NULL DEFAULT 'usuario',
     password_hash VARCHAR(255) NULL,       -- NULL = persona sin acceso a la web
     activo        BOOLEAN NOT NULL DEFAULT TRUE,
+    mfa           JSON NULL,               -- verificación en dos pasos (functions/api/mfa.py)
     creado_en     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

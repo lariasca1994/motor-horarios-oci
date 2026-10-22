@@ -10,13 +10,15 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from auth import (bloqueado, crear_token, crear_token_recuperacion, hash_clave, huella_coincide,
-                  leer_token_recuperacion, limpiar_fallos, registrar_fallo, solo_admin,
-                  usuario_actual, verificar_clave)
+import mfa
+from auth import (bloqueado, crear_pase_mfa, crear_token, crear_token_recuperacion, hash_clave,
+                  huella_coincide, leer_pase_mfa, leer_token_recuperacion, limpiar_fallos,
+                  registrar_fallo, solo_admin, usuario_actual, verificar_clave)
 from db import conexion, modo_bd
 from modelos import (
-    CambioClave, Confirmacion, Disponibilidad, DisponibilidadIn, Login, Recuperar, Reglas,
-    Restablecer, Reunion, ReunionIn, Sesion, Sugerencia, Usuario, UsuarioCambios, UsuarioIn,
+    CambioClave, Confirmacion, Disponibilidad, DisponibilidadIn, EstadoMfa, Login, MfaCodigo,
+    MfaMetodo, MfaPase, PasoMfa, Recuperar, Reglas, Restablecer, Reunion, ReunionIn, Sesion,
+    Sugerencia, Usuario, UsuarioCambios, UsuarioIn,
 )
 from motor_cliente import disparar_motor
 
@@ -90,7 +92,7 @@ def health_db():
 
 # ---------------------------------------------------------------- sesión
 
-@app.post("/auth/login", response_model=Sesion)
+@app.post("/auth/login", response_model=PasoMfa)
 def login(datos: Login):
     email = datos.email.lower()
     if bloqueado(email):
@@ -103,7 +105,111 @@ def login(datos: Login):
         registrar_fallo(email)
         raise HTTPException(status_code=401, detail="correo o contraseña incorrectos")
     limpiar_fallos(email)
+    # La contraseña sola no abre sesión: falta el segundo paso.
+    return _paso_mfa(u["id"], enviar=True)
+
+
+# ---------------------------------------------------------------- verificación en dos pasos
+
+def _paso_mfa(usuario_id: int, enviar: bool = False) -> PasoMfa:
+    u = mfa.cargar(usuario_id)
+    metodo = mfa.preferido(u)
+    if enviar and metodo == "correo":
+        mfa.enviar_codigo(u)
+    return PasoMfa(pase=crear_pase_mfa(u["id"]), configurado=mfa.configurado(u), metodo=metodo,
+                   activos=mfa.metodos_activos(u), email=u["email"])
+
+
+def _usuario_del_pase(pase: str | None) -> dict:
+    usuario_id = leer_pase_mfa(pase)
+    u = mfa.cargar(usuario_id) if usuario_id else None
+    if not u or not u["activo"]:
+        raise HTTPException(status_code=401, detail="el paso de verificación venció; vuelve a ingresar")
+    return u
+
+
+def _sesion(u: dict) -> Sesion:
     return Sesion(token=crear_token(u["id"]), usuario=_a_usuario(u, u))
+
+
+def _iniciar_metodo(u: dict, metodo: str) -> dict:
+    if metodo == "totp":
+        return mfa.iniciar_totp(u)
+    if not mfa.enviar_codigo(u):
+        raise HTTPException(status_code=429, detail="pediste varios códigos seguidos; espera unos minutos")
+    return {"enviado": True}
+
+
+def _activar(u: dict, metodo: str, codigo: str) -> None:
+    activado = mfa.activar_totp(u, codigo) if metodo == "totp" else mfa.activar_correo(u, codigo)
+    if not activado:
+        raise HTTPException(status_code=400, detail="el código no es correcto o ya venció")
+
+
+@app.post("/auth/mfa/configurar")
+def mfa_configurar(datos: MfaMetodo):
+    """Primera vez: prepara el método elegido (QR de la app o código al correo)."""
+    u = _usuario_del_pase(datos.pase)
+    if mfa.configurado(u):
+        raise HTTPException(status_code=409, detail="la verificación en dos pasos ya está configurada")
+    return _iniciar_metodo(u, datos.metodo)
+
+
+@app.post("/auth/mfa/activar", response_model=Sesion)
+def mfa_activar(datos: MfaCodigo):
+    u = _usuario_del_pase(datos.pase)
+    if mfa.configurado(u):
+        raise HTTPException(status_code=409, detail="la verificación en dos pasos ya está configurada")
+    _activar(u, datos.metodo, datos.codigo)
+    return _sesion(u)
+
+
+@app.post("/auth/mfa/correo", status_code=202)
+def mfa_reenviar(datos: MfaPase):
+    u = _usuario_del_pase(datos.pase)
+    if "correo" not in mfa.metodos_activos(u):
+        raise HTTPException(status_code=400, detail="el código por correo no está activo en tu cuenta")
+    if not mfa.enviar_codigo(u):
+        raise HTTPException(status_code=429, detail="pediste varios códigos seguidos; espera unos minutos")
+    return {"detail": f"te enviamos un código a {u['email']}"}
+
+
+@app.post("/auth/mfa/verificar", response_model=Sesion)
+def mfa_verificar(datos: MfaCodigo):
+    u = _usuario_del_pase(datos.pase)
+    if not mfa.verificar(u, datos.metodo, datos.codigo):
+        raise HTTPException(status_code=401, detail="el código no es correcto o ya venció")
+    return _sesion(u)
+
+
+@app.get("/auth/mfa", response_model=EstadoMfa)
+def mfa_estado(sesion: dict = Depends(usuario_actual)):
+    u = mfa.cargar(sesion["id"])
+    return EstadoMfa(activos=mfa.metodos_activos(u), preferido=mfa.preferido(u))
+
+
+@app.post("/auth/mfa/agregar")
+def mfa_agregar(datos: MfaMetodo, sesion: dict = Depends(usuario_actual)):
+    """Desde el perfil: agrega el método que la cuenta todavía no tiene."""
+    u = mfa.cargar(sesion["id"])
+    if datos.metodo in mfa.metodos_activos(u):
+        raise HTTPException(status_code=409, detail="ese método ya está activo")
+    return _iniciar_metodo(u, datos.metodo)
+
+
+@app.post("/auth/mfa/agregar/activar", response_model=EstadoMfa)
+def mfa_agregar_activar(datos: MfaCodigo, sesion: dict = Depends(usuario_actual)):
+    u = mfa.cargar(sesion["id"])
+    _activar(u, datos.metodo, datos.codigo)
+    return EstadoMfa(activos=mfa.metodos_activos(u), preferido=mfa.preferido(u))
+
+
+@app.post("/auth/mfa/preferido", response_model=EstadoMfa)
+def mfa_preferido(datos: MfaMetodo, sesion: dict = Depends(usuario_actual)):
+    u = mfa.cargar(sesion["id"])
+    if not mfa.elegir_preferido(u, datos.metodo):
+        raise HTTPException(status_code=400, detail="ese método no está activo")
+    return EstadoMfa(activos=mfa.metodos_activos(u), preferido=mfa.preferido(u))
 
 
 @app.get("/auth/yo", response_model=Usuario)
@@ -222,11 +328,12 @@ def _insertar_usuario(nuevo: UsuarioIn) -> Usuario:
     return Usuario(id=usuario_id, nombre=nombre, email=email, rol="usuario")
 
 
-@app.post("/auth/registro", response_model=Sesion, status_code=201)
+@app.post("/auth/registro", response_model=PasoMfa, status_code=201)
 def registro(nuevo: UsuarioIn):
-    """Registro público: las cuentas nuevas siempre son 'usuario'; los admins se asignan aparte."""
+    """Registro público: las cuentas nuevas siempre son 'usuario'; los admins se asignan aparte.
+    Antes de entrar, la cuenta elige su verificación en dos pasos."""
     u = _insertar_usuario(nuevo)
-    return Sesion(token=crear_token(u.id), usuario=u)
+    return _paso_mfa(u.id)
 
 
 @app.post("/usuarios", response_model=Usuario, status_code=201)
