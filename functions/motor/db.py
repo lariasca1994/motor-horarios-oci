@@ -11,6 +11,7 @@ import os
 import queue
 import ssl as ssl_lib
 import tempfile
+import time
 from contextlib import contextmanager
 
 import pymysql
@@ -84,6 +85,10 @@ def get_connection() -> pymysql.connections.Connection:
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
         connect_timeout=10,
+        # Sin límite, una conexión que la red cortó en silencio deja la petición
+        # colgada indefinidamente esperando respuesta.
+        read_timeout=30,
+        write_timeout=30,
         autocommit=False,
     )
 
@@ -93,15 +98,21 @@ def get_connection() -> pymysql.connections.Connection:
 # con ping antes de entregarlas) y al devolverlas se deshace cualquier transacción
 # que haya quedado abierta, igual que si se hubiera cerrado.
 POOL_MAX_LIBRES = 4
-_libres: "queue.LifoQueue[pymysql.connections.Connection]" = queue.LifoQueue(maxsize=POOL_MAX_LIBRES)
+# La red de la nube corta en silencio las conexiones TCP ociosas: una conexión que
+# lleva más que esto sin usarse se descarta en vez de reutilizarse.
+POOL_MAX_INACTIVA_SEG = 60
+_libres: "queue.LifoQueue[tuple[pymysql.connections.Connection, float]]" = queue.LifoQueue(maxsize=POOL_MAX_LIBRES)
 
 
 def _tomar() -> pymysql.connections.Connection:
     while True:
         try:
-            conn = _libres.get_nowait()
+            conn, devuelta = _libres.get_nowait()
         except queue.Empty:
             return get_connection()
+        if time.monotonic() - devuelta > POOL_MAX_INACTIVA_SEG:
+            _cerrar(conn)
+            continue
         try:
             conn.ping(reconnect=False)
             return conn
@@ -112,7 +123,7 @@ def _tomar() -> pymysql.connections.Connection:
 def _devolver(conn: pymysql.connections.Connection) -> None:
     try:
         conn.rollback()
-        _libres.put_nowait(conn)
+        _libres.put_nowait((conn, time.monotonic()))
     except (pymysql.Error, queue.Full):
         _cerrar(conn)
 
