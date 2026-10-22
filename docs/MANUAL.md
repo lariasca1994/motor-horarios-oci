@@ -91,7 +91,7 @@ Qué servicio de nube, base de datos o API usa el proyecto y para qué sirve cad
 | 2 | Correo | Donde recibirás las invitaciones | Formato válido y único |
 | 3 | Contraseña | Tu contraseña | Entre **10 y 128 caracteres** |
 | 4 | Confirmar contraseña | La misma contraseña | Debe coincidir con el campo 3 |
-| 5 | Crear cuenta | Botón | Crea la cuenta y te deja con la sesión iniciada |
+| 5 | Crear cuenta | Botón | Crea la cuenta y te lleva a elegir tu verificación en dos pasos |
 
 ### 4.2 Iniciar sesión
 
@@ -101,9 +101,23 @@ Qué servicio de nube, base de datos o API usa el proyecto y para qué sirve cad
 |:-:|---|---|
 | 1 | Correo | El correo de tu cuenta |
 | 2 | Contraseña | Tu contraseña |
-| 3 | Ingresar | Abre **Mis reuniones**. La sesión dura 12 horas |
+| 3 | Ingresar | Pide el código de tu verificación en dos pasos; al escribirlo y pulsar **Verificar** se abre **Mis reuniones**. La sesión dura 12 horas |
 
 Tras **5 intentos fallidos en 15 minutos**, ese correo queda bloqueado temporalmente.
+
+### 4.2.1 Verificación en dos pasos (obligatoria)
+
+Cada ingreso pide, además de la contraseña, un código. La primera vez que ingresas (o al crear la
+cuenta) eliges cómo recibirlo:
+
+| Método | Cómo funciona |
+|---|---|
+| **App autenticadora** (recomendado) | Escaneas un código QR con Google Authenticator, Microsoft Authenticator u otra app; desde ese momento la app muestra un código nuevo cada 30 segundos, incluso sin internet. Si no puedes escanear, escribe la clave que aparece bajo el QR. |
+| **Código por correo** | Cada vez que ingresas te llega un código de 6 dígitos que vence en 10 minutos y sirve una sola vez. |
+
+Confirma el método escribiendo el primer código. Desde **Seguridad** (menú superior) puedes
+**agregar el método que no elegiste** y escoger cuál se pide **por defecto**; tener los dos te
+permite entrar aunque no tengas el teléfono a mano.
 
 ### 4.3 Mi agenda
 
@@ -193,6 +207,7 @@ Tu confianza es lo primero: la plataforma solo pide los datos necesarios para fu
 | Contraseña | Iniciar sesión | MySQL HeatWave, **solo su huella scrypt** | Nadie: no se puede leer ni recuperar |
 | Horario laboral y bloques | Calcular huecos libres | MySQL HeatWave | Tú y el administrador; el motor los usa sin mostrarlos a otros |
 | Reuniones | Coordinar | MySQL HeatWave | El organizador, los participantes y el administrador |
+| Verificación en dos pasos | Confirmar que eres tú al ingresar | MySQL HeatWave: clave de la app **cifrada** (AES-GCM) y código del correo **solo como huella** | Nadie: no se puede leer desde la base |
 | Sesión | Mantenerte conectado | `localStorage` de tu navegador | Solo tu navegador; vence a las 12 horas |
 
 ### Cómo se protege tu información
@@ -203,6 +218,9 @@ Comprobado en el código del proyecto (`functions/api/auth.py`, `functions/api/m
 - **Contraseñas con scrypt** y sal aleatoria; la comparación se hace en tiempo constante.
 - **Sesión con token firmado (HMAC-SHA256)** que vence a las 12 horas; en cada petición se revisa
   que la cuenta siga activa.
+- **Verificación en dos pasos obligatoria** con app autenticadora (TOTP) o código por correo:
+  la clave de la app se guarda cifrada, un código no se acepta dos veces, 5 códigos errados de la
+  app la bloquean 15 minutos, y el código del correo vence en 10 minutos y admite 5 intentos.
 - **Bloqueo por intentos:** 5 contraseñas erradas en 15 minutos bloquean temporalmente ese correo.
 - **Tu agenda es tuya:** solo tú (o el administrador) puedes ver o cambiar tu horario y tus bloques.
 - **Reuniones privadas:** solo el organizador, los participantes y el administrador ven una

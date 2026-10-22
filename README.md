@@ -54,7 +54,8 @@ correo (SMTP) a cada persona seleccionada.
 Todo requiere iniciar sesión (salvo la portada y `/health`). Cualquiera puede crear su
 cuenta en `registro.html`; las cuentas nuevas empiezan con horario 8:00–18:00 de lunes a
 viernes. Cada persona ve las reuniones que organiza o en las que participa y gestiona su
-propia agenda. Contraseñas con scrypt; sesión con token firmado (HMAC-SHA256, 12 h).
+propia agenda. Contraseñas con scrypt; verificación en dos pasos obligatoria (app
+autenticadora o código por correo, a elección); sesión con token firmado (HMAC-SHA256, 12 h).
 
 Las cuentas iniciales de la demo se cargan desde un archivo privado (no versionado) con
 `local/crear_usuarios.py`, sin sobrescribir contraseñas ya cambiadas. Cada participante
@@ -69,7 +70,7 @@ recibe por correo (Brevo) las sugerencias de sus reuniones.
 | `functions/api` | API REST (FastAPI) y autenticación. |
 | `functions/motor` | Cálculo de huecos (`motor.py`), RRULE, `procesamiento.py`, correos. |
 | `frontend` | HTML/CSS/JS estático (Vercel). La URL de la API está en `js/config.js`. |
-| `db` | `001_esquema.sql` (tablas), `002_datos_demo.sql` (solo desarrollo) y `003_reglas_por_defecto.sql` (migración). |
+| `db` | `001_esquema.sql` (tablas), `002_datos_demo.sql` (solo desarrollo) y `003_reglas_por_defecto.sql` y `004_verificacion_dos_pasos.sql` (migraciones, con la cuenta administradora). |
 | `deploy` | Scripts de OCI (red, MySQL, Vault, NLB). |
 | `local` | Scripts para crear la base y levantar todo en el equipo. |
 
@@ -86,6 +87,8 @@ acento identifica la base de datos: azul MySQL (`#00758f`).
 | `reuniones.html` | Proponer reuniones, ver sugerencias, confirmar / recalcular / cancelar |
 | `agenda.html` | Horario laboral, días laborables y bloques ocupados/preferidos (puntuales o recurrentes) |
 | `clave.html` | Cambio de contraseña |
+| `verificacion.html` | Segundo paso del ingreso: elegir y confirmar el método, o escribir el código |
+| `seguridad.html` | Agregar el otro método de verificación y elegir el preferido |
 
 `js/config.js` usa `http://localhost:8000` en local y la API de Render en producción.
 
@@ -155,14 +158,17 @@ La arquitectura con OCI Functions + API Gateway (`functions/*/func.py`, `Dockerf
 1. En la portada, pulsa **Crear cuenta**.
 2. Completa **Nombre**, **Correo**, **Contraseña (mínimo 10 caracteres)** y
    **Confirmar contraseña**.
-3. Pulsa **Crear cuenta**. La cuenta empieza con horario de 8:00 a 18:00, de lunes a
-   viernes.
+3. Pulsa **Crear cuenta** y elige tu verificación en dos pasos: **App autenticadora**
+   (escanea el QR y escribe el primer código) o **Código por correo**. La cuenta empieza con
+   horario de 8:00 a 18:00, de lunes a viernes.
 
 ### 5.2 Iniciar sesión
 
 1. Pulsa **Ya tengo cuenta**, escribe **Correo** y **Contraseña** y pulsa **Ingresar**.
-2. La sesión dura 12 horas.
-3. ¿La olvidaste? Pulsa **¿Olvidaste tu contraseña?** y escribe tu correo: si la cuenta existe,
+2. Escribe el código de 6 dígitos de tu app o de tu correo y pulsa **Verificar**. En
+   **Seguridad** puedes agregar el otro método y elegir cuál se pide por defecto.
+3. La sesión dura 12 horas.
+4. ¿La olvidaste? Pulsa **¿Olvidaste tu contraseña?** y escribe tu correo: si la cuenta existe,
    llega un enlace (API de Brevo) que vence en 30 minutos y sirve una sola vez.
 
 ### 5.3 Llenar tu agenda
