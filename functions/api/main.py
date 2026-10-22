@@ -421,7 +421,7 @@ def obtener_reunion(reunion_id: int, u: dict = Depends(usuario_actual)):
 @app.post("/reuniones", response_model=Reunion, status_code=201)
 def crear_reunion(reunion: ReunionIn, u: dict = Depends(usuario_actual)):
     # Un usuario normal siempre organiza él mismo; un admin puede elegir organizador.
-    organizador = reunion.organizador_id if _es_admin(u) else u["id"]
+    organizador = reunion.organizador_id if _es_admin(u) and reunion.organizador_id else u["id"]
     participantes = sorted(set(reunion.participantes) | {organizador})
     with conexion() as conn, conn.cursor() as cur:
         cur.execute("SELECT COUNT(*) AS n FROM usuarios WHERE activo = TRUE AND id IN %s",

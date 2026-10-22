@@ -97,7 +97,8 @@ class ReunionIn(BaseModel):
     duracion_min: int = Field(ge=15, le=480)
     ventana_inicio: datetime
     ventana_fin: datetime
-    organizador_id: int
+    # Solo lo usa un admin para organizar en nombre de otra persona; vacío = quien crea la reunión.
+    organizador_id: Optional[int] = None
     participantes: List[int] = Field(default_factory=list)
 
     @model_validator(mode="after")

@@ -102,7 +102,8 @@
                     duracion_min: Number(form.get("duracion")),
                     ventana_inicio: form.get("inicio"),
                     ventana_fin: form.get("fin"),
-                    organizador_id: esAdmin ? Number(form.get("organizador")) : yo.id,
+                    // Si la lista aún no cargó (API despertando), organiza quien crea la reunión.
+            organizador_id: esAdmin ? Number(form.get("organizador")) || yo.id : yo.id,
                     participantes: form.getAll("participantes").map(Number),
                 }),
             });
