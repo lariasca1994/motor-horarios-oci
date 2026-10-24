@@ -1,5 +1,5 @@
 # Backend en Render: API (FastAPI) + motor en el mismo proceso (MOTOR_MODE=inproceso).
-FROM python:3.12-slim-bookworm
+FROM python:3.12.15-slim-bookworm
 WORKDIR /app
 COPY functions/api/requirements.txt requirements-api.txt
 COPY functions/motor/requirements.txt requirements-motor.txt

@@ -4,3 +4,5 @@ python-dateutil==2.9.0.post0
 oci==2.187.0
 fdk==0.1.124
 httpx==0.28.1
+# CA de confianza sin los intermedios comprometidos de eMudhra (octubre 2026).
+certifi>=2026.10.19
