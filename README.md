@@ -225,7 +225,7 @@ Si la API o la base de datos (MySQL HeatWave en Oracle Cloud) no responden, la a
 
 ## 6. Instalación para pruebas
 
-Requisitos: Python 3.12+ y un MySQL 8 local (aquí: servicio `MySQL84`, puerto 3306).
+Requisitos: Python 3.12.15+ y un MySQL 8 local (aquí: servicio `MySQL84`, puerto 3306).
 
 ```powershell
 python -m venv .venv
