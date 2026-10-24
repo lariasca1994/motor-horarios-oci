@@ -232,6 +232,8 @@ Comprobado en el código del proyecto (`functions/api/auth.py`, `functions/api/m
   texto del usuario en el SQL.
 - **CORS restringido** a la web oficial y secretos (base, clave de firma, SMTP) en variables de
   entorno, nunca en el repositorio.
+- **Runtime con parches de seguridad:** las imágenes fijan Python 3.12.15 y certifi 2026.10.19 o
+  posterior, que deja de confiar en los certificados intermedios comprometidos de eMudhra.
 
 ## 6. Agradecimientos
 
