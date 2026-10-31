@@ -204,24 +204,23 @@ Tu confianza es lo primero: la plataforma solo pide los datos necesarios para fu
 |---|---|---|---|
 | Nombre | Que te puedan invitar | MySQL HeatWave en Oracle Cloud | Todas las cuentas activas |
 | Correo | Iniciar sesión y recibir invitaciones | MySQL HeatWave | **Solo tú y el administrador** |
-| Contraseña | Iniciar sesión | MySQL HeatWave, **solo su huella scrypt** | Nadie: no se puede leer ni recuperar |
+| Contraseña | Iniciar sesión | MySQL HeatWave, **solo su huella** | Nadie: no se puede leer ni recuperar |
 | Horario laboral y bloques | Calcular huecos libres | MySQL HeatWave | Tú y el administrador; el motor los usa sin mostrarlos a otros |
 | Reuniones | Coordinar | MySQL HeatWave | El organizador, los participantes y el administrador |
-| Verificación en dos pasos | Confirmar que eres tú al ingresar | MySQL HeatWave: clave de la app **cifrada** (AES-GCM) y código del correo **solo como huella** | Nadie: no se puede leer desde la base |
-| Sesión | Mantenerte conectado | `localStorage` de tu navegador | Solo tu navegador; vence a las 12 horas |
+| Verificación en dos pasos | Confirmar que eres tú al ingresar | MySQL HeatWave: clave de la app **cifrada** y código del correo **solo como huella** | Nadie: no se puede leer desde la base |
+| Sesión | Mantenerte conectado | `localStorage` de tu navegador | Solo tu navegador; vence sola |
 
 ### Cómo se protege tu información
 
 Comprobado en el código del proyecto (`functions/api/auth.py`, `functions/api/main.py`,
 `functions/api/db.py`):
 
-- **Contraseñas con scrypt** y sal aleatoria; la comparación se hace en tiempo constante.
-- **Sesión con token firmado (HMAC-SHA256)** que vence a las 12 horas; en cada petición se revisa
+- **Contraseñas protegidas** con sal aleatoria; solo se guarda su huella.
+- **Sesión con token firmado** que vence sola; en cada petición se revisa
   que la cuenta siga activa.
 - **Verificación en dos pasos obligatoria** con app autenticadora (TOTP) o código por correo:
-  la clave de la app se guarda cifrada, un código no se acepta dos veces, 5 códigos errados de la
-  app la bloquean 15 minutos, y el código del correo vence en 10 minutos y admite 5 intentos.
-- **Bloqueo por intentos:** 5 contraseñas erradas en 15 minutos bloquean temporalmente ese correo.
+  la clave de la app se guarda cifrada, un código no se acepta dos veces, los intentos errados
+  bloquean temporalmente y el código del correo vence en pocos minutos.
 - **Tu agenda es tuya:** solo tú (o el administrador) puedes ver o cambiar tu horario y tus bloques.
 - **Reuniones privadas:** solo el organizador, los participantes y el administrador ven una
   reunión; solo el organizador puede confirmarla, recalcularla o cancelarla.

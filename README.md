@@ -169,7 +169,7 @@ La arquitectura con OCI Functions + API Gateway (`functions/*/func.py`, `Dockerf
 1. Pulsa **Ya tengo cuenta**, escribe **Correo** y **Contraseña** y pulsa **Ingresar**.
 2. Escribe el código de 6 dígitos de tu app o de tu correo y pulsa **Verificar**. En
    **Seguridad** puedes agregar el otro método y elegir cuál se pide por defecto.
-3. La sesión dura 12 horas.
+3. La sesión vence sola.
 4. ¿La olvidaste? Pulsa **¿Olvidaste tu contraseña?** y escribe tu correo: si la cuenta existe,
    llega un enlace (API de Brevo) que vence en 30 minutos y sirve una sola vez.
 
