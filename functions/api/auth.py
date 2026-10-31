@@ -12,7 +12,6 @@ import json
 import logging
 import os
 import secrets
-import threading
 import time
 
 from fastapi import Depends, HTTPException
@@ -151,31 +150,6 @@ def leer_token_recuperacion(token: str) -> tuple[int, str] | None:
 
 def huella_coincide(password_hash: str, huella: str) -> bool:
     return hmac.compare_digest(_huella(password_hash), huella)
-
-
-# ---------------------------------------------------------------- freno a fuerza bruta
-
-_INTENTOS: dict[str, list[float]] = {}
-_LOCK = threading.Lock()
-_MAX_FALLOS, _VENTANA = 5, 15 * 60
-
-
-def bloqueado(email: str) -> bool:
-    ahora = time.time()
-    with _LOCK:
-        fallos = [t for t in _INTENTOS.get(email, []) if ahora - t < _VENTANA]
-        _INTENTOS[email] = fallos
-        return len(fallos) >= _MAX_FALLOS
-
-
-def registrar_fallo(email: str):
-    with _LOCK:
-        _INTENTOS.setdefault(email, []).append(time.time())
-
-
-def limpiar_fallos(email: str):
-    with _LOCK:
-        _INTENTOS.pop(email, None)
 
 
 # ---------------------------------------------------------------- dependencias FastAPI

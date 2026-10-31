@@ -54,8 +54,10 @@ correo (SMTP) a cada persona seleccionada.
 Todo requiere iniciar sesión (salvo la portada y `/health`). Cualquiera puede crear su
 cuenta en `registro.html`; las cuentas nuevas empiezan con horario 8:00–18:00 de lunes a
 viernes. Cada persona ve las reuniones que organiza o en las que participa y gestiona su
-propia agenda. Contraseñas con scrypt; verificación en dos pasos obligatoria (app
-autenticadora o código por correo, a elección); sesión con token firmado (HMAC-SHA256, 12 h).
+propia agenda. Contraseñas protegidas con hash; verificación en dos pasos obligatoria (app
+autenticadora o código por correo, a elección); bloqueo temporal ante intentos fallidos
+repetidos; registro de eventos de seguridad (ingresos, intentos fallidos, bloqueos y cambios de
+contraseña); sesión con token firmado que vence sola.
 
 Las cuentas iniciales de la demo se cargan desde un archivo privado (no versionado) con
 `local/crear_usuarios.py`, sin sobrescribir contraseñas ya cambiadas. Cada participante

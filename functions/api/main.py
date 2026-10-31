@@ -10,10 +10,11 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+import auditoria
 import mfa
-from auth import (bloqueado, crear_pase_mfa, crear_token, crear_token_recuperacion, hash_clave,
-                  huella_coincide, leer_pase_mfa, leer_token_recuperacion, limpiar_fallos,
-                  registrar_fallo, solo_admin, usuario_actual, verificar_clave)
+from auth import (crear_pase_mfa, crear_token, crear_token_recuperacion, hash_clave,
+                  huella_coincide, leer_pase_mfa, leer_token_recuperacion,
+                  solo_admin, usuario_actual, verificar_clave)
 from db import conexion, modo_bd
 from modelos import (
     CambioClave, Confirmacion, Disponibilidad, DisponibilidadIn, EstadoMfa, Login, MfaCodigo,
@@ -95,16 +96,19 @@ def health_db():
 @app.post("/auth/login", response_model=PasoMfa)
 def login(datos: Login):
     email = datos.email.lower()
-    if bloqueado(email):
-        raise HTTPException(status_code=429, detail="demasiados intentos; espera 15 minutos")
     with conexion() as conn, conn.cursor() as cur:
         cur.execute("SELECT id, nombre, email, rol, activo, password_hash FROM usuarios "
                     "WHERE email = %s", (email,))
         u = cur.fetchone()
-    if not u or not u["activo"] or not verificar_clave(datos.clave, u["password_hash"]):
-        registrar_fallo(email)
+    # El bloqueo vive en la base: vale igual con varias instancias o tras un reinicio.
+    cuenta = mfa.cargar(u["id"]) if u and u["activo"] else None
+    if cuenta and mfa.clave_bloqueada(cuenta):
+        raise HTTPException(status_code=429, detail="demasiados intentos; espera unos minutos")
+    if not cuenta or not verificar_clave(datos.clave, u["password_hash"]):
+        if cuenta:
+            mfa.fallo_de_clave(cuenta)
         raise HTTPException(status_code=401, detail="correo o contraseña incorrectos")
-    limpiar_fallos(email)
+    mfa.clave_correcta(cuenta)
     # La contraseña sola no abre sesión: falta el segundo paso.
     return _paso_mfa(u["id"], enviar=True)
 
@@ -226,6 +230,7 @@ def cambiar_clave(datos: CambioClave, u: dict = Depends(usuario_actual)):
         cur.execute("UPDATE usuarios SET password_hash = %s WHERE id = %s",
                     (hash_clave(datos.nueva), u["id"]))
         conn.commit()
+    _clave_restablecida(u["id"])
 
 
 # ---------------------------------------------------------------- recuperación de cuenta
@@ -275,6 +280,9 @@ def recuperar_cuenta(datos: Recuperar):
         u = cur.fetchone()
     if u and u["activo"]:
         enlace = f"{_url_frontend()}/restablecer#{crear_token_recuperacion(u['id'], u['password_hash'])}"
+        cuenta = mfa.cargar(u["id"])
+        if cuenta:
+            auditoria.registrar(auditoria.RECUPERACION, cuenta)
         try:
             from notificaciones import enviar_correos
             enviar_correos([(u["nombre"], u["email"])], "Restablece tu contraseña · Motor de Horarios",
@@ -299,7 +307,13 @@ def restablecer_clave(datos: Restablecer):
         cur.execute("UPDATE usuarios SET password_hash = %s WHERE id = %s",
                     (hash_clave(datos.nueva), usuario_id))
         conn.commit()
-    limpiar_fallos(u["email"])
+    _clave_restablecida(usuario_id)
+
+
+def _clave_restablecida(usuario_id: int) -> None:
+    cuenta = mfa.cargar(usuario_id)
+    if cuenta:
+        mfa.clave_restablecida(cuenta)
 
 
 # ---------------------------------------------------------------- personas

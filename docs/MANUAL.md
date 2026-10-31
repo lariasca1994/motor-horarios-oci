@@ -232,6 +232,9 @@ Comprobado en el código del proyecto (`functions/api/auth.py`, `functions/api/m
   texto del usuario en el SQL.
 - **CORS restringido** a la web oficial y secretos (base, clave de firma, SMTP) en variables de
   entorno, nunca en el repositorio.
+- **Bloqueo temporal** ante intentos fallidos repetidos de contraseña o de código.
+- **Registro de eventos de seguridad:** ingresos, intentos fallidos, bloqueos y cambios de
+  contraseña quedan registrados (nunca contraseñas ni códigos) y se depuran solos.
 - **Al día en seguridad:** el runtime, el sistema y las dependencias se mantienen con los últimos
   parches y se revisan periódicamente.
 
