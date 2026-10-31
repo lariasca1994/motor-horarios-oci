@@ -101,9 +101,9 @@ Qué servicio de nube, base de datos o API usa el proyecto y para qué sirve cad
 |:-:|---|---|
 | 1 | Correo | El correo de tu cuenta |
 | 2 | Contraseña | Tu contraseña |
-| 3 | Ingresar | Pide el código de tu verificación en dos pasos; al escribirlo y pulsar **Verificar** se abre **Mis reuniones**. La sesión dura 12 horas |
+| 3 | Ingresar | Pide el código de tu verificación en dos pasos; al escribirlo y pulsar **Verificar** se abre **Mis reuniones**. La sesión vence sola |
 
-Tras **5 intentos fallidos en 15 minutos**, ese correo queda bloqueado temporalmente.
+Tras varios intentos fallidos seguidos, ese correo queda bloqueado temporalmente.
 
 ### 4.2.1 Verificación en dos pasos (obligatoria)
 
