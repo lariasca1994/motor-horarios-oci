@@ -42,7 +42,7 @@ correo (SMTP) a cada persona seleccionada.
   persona registra una sola vez su horario laboral y sus bloques ocupados o
   preferidos. Al proponer una reunión, el motor cruza las agendas de todos los
   participantes y sugiere **los 3 mejores horarios** en que todos están libres.
-- **Qué pasa después:** cada participante recibe las sugerencias por correo; el
+- **Qué pasa después:** cada participante recibe las sugerencias por correo (y el equipo, un aviso por Telegram); el
   organizador confirma, recalcula o cancela desde la aplicación.
 - **Cómo probarlo:** entra a la [demo](https://motor-horarios-oci.vercel.app),
   crea una cuenta en *Registro*, llena tu agenda y propone una reunión. La
@@ -149,6 +149,7 @@ La arquitectura con OCI Functions + API Gateway (`functions/*/func.py`, `Dockerf
 | ![Oracle Cloud](https://img.shields.io/badge/Oracle_Cloud-C74634?style=for-the-badge&logo=oracle&logoColor=white) | Aloja la base en una subred privada, el Network Load Balancer que la publica de forma restringida, el Vault de credenciales y la VM alternativa. |
 | ![MySQL HeatWave](https://img.shields.io/badge/MySQL_HeatWave-4479A1?style=for-the-badge&logo=mysql&logoColor=white) | Guarda usuarios, reglas de horario, bloques de agenda, reuniones y sugerencias. |
 | ![Brevo](https://img.shields.io/badge/Brevo-0B996E?style=for-the-badge&logo=brevo&logoColor=white) | Envía a cada participante las sugerencias de sus reuniones. |
+| ![Telegram](https://img.shields.io/badge/Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white) | Avisa al equipo las sugerencias de cada reunión, con el mismo contenido del correo. |
 | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-181717?style=for-the-badge&logo=githubactions&logoColor=white) | El flujo `.github/workflows/mantener-activo.yml` consulta `/health` cada 10 minutos de lunes a viernes de 7:00 a 19:00 (Bogotá) para que Render no se suspenda en horario laboral; fuera de ese horario duerme y ahorra horas gratuitas. |
 
 ---
