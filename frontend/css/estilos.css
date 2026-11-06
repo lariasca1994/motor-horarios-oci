@@ -207,7 +207,7 @@ form .boton { margin-top: 1rem; }
 .enlace-boton-peligro { color: #b3261e; }
 [data-tema="oscuro"] .enlace-boton-peligro { color: #f29a94; }
 
-/* ------------------------------------------------ propio del Motor de Horarios */
+/* ------------------------------------------------ propio del coordinador de reuniones */
 
 /* Estados de reunión (misma familia visual que los estados de otros proyectos) */
 .estado-reunion {

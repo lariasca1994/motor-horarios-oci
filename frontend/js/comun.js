@@ -121,14 +121,14 @@ function mostrarMantenimiento() {
     enMantenimiento = true;
     const main = document.querySelector("main");
     if (!main) return;
-    document.title = "En mantenimiento — Motor de Horarios";
+    document.title = "En mantenimiento — Coordinador de reuniones";
     // Se oculta el contenido en vez de borrarlo: las cargas que siguen en curso
     // encuentran sus elementos y no lanzan errores.
     for (const hijo of main.children) hijo.hidden = true;
     main.insertAdjacentHTML("afterbegin", `
         <section class="mantenimiento" role="status" aria-live="polite">
             <div class="mantenimiento-icono" aria-hidden="true"><span></span><span></span><span></span></div>
-            <p class="mantenimiento-etiqueta">Motor de Horarios</p>
+            <p class="mantenimiento-etiqueta">Coordinador de reuniones</p>
             <h1>Estamos en mantenimiento</h1>
             <p>El servicio no está respondiendo en este momento, así que no se pueden consultar ni proponer reuniones.</p>
             <ul>

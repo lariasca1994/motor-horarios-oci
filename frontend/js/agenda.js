@@ -176,7 +176,7 @@
                 const persona = (await api("/usuarios")).find((u) => u.id === usuarioId);
                 $("#titulo").textContent = `Agenda de ${persona ? persona.nombre : "#" + usuarioId}`;
                 $("#volver-usuarios").hidden = false;
-                document.title = `${$("#titulo").textContent} — Motor de Horarios`;
+                document.title = `${$("#titulo").textContent} — Coordinador de reuniones`;
             } else if (params.get("bienvenida")) {
                 aviso(avisoEl, "¡Cuenta creada! Revisa tu horario laboral y agrega tus bloques ocupados para recibir mejores sugerencias.", "info");
             }
