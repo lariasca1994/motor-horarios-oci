@@ -1,4 +1,4 @@
-# 📘 Manual de usuario · Motor de Horarios
+# 📘 Manual de usuario · Coordinador de reuniones
 
 Guía para usar la plataforma paso a paso: qué significa cada campo, qué datos se ingresan y qué
 protege la plataforma. Para la parte técnica vuelve al [README](../README.md).
@@ -34,7 +34,8 @@ horarios** en que todos están libres. Cada participante recibe las sugerencias 
 
 Proyecto en desarrollo, pensado como demo de portafolio:
 
-- No hay recuperación de contraseña por correo: guárdala en un gestor.
+- Los correos (códigos, enlaces y sugerencias) dependen de un servicio externo: si tardan, revisa
+  la carpeta de spam.
 - El token vive en `localStorage`: usa **Salir** en equipos compartidos.
 - Tu nombre es visible para todas las cuentas activas; usa un nombre que no te moleste mostrar.
 
@@ -44,7 +45,6 @@ Palabras técnicas que aparecen en este manual, explicadas en lenguaje simple.
 
 | Término | Qué significa |
 |---|---|
-| **Administrador** | Cuenta con permisos para gestionar usuarios y configuraciones de la aplicación. |
 | **API** | Puerta de entrada de un programa para que otros programas le pidan o le envíen datos. |
 | **Arranque en frío** | Los servidores gratuitos se apagan sin uso; la primera visita tarda unos segundos mientras vuelven a encenderse. |
 | **Base de datos** | Lugar donde la aplicación guarda la información de forma ordenada y permanente. |
@@ -59,7 +59,6 @@ Palabras técnicas que aparecen en este manual, explicadas en lenguaje simple.
 | **Nube** | Servidores de una empresa (Amazon, Microsoft, Google, Oracle…) donde la aplicación funciona sin depender de un computador propio. |
 | **Rate limit (límite de intentos)** | Tope de intentos en poco tiempo, para frenar a quien intenta adivinar contraseñas. |
 | **Recurrencia (RRULE)** | Regla que indica cada cuánto se repite un evento (diario, semanal, días laborables…). |
-| **Rol** | Tipo de cuenta que define qué puede hacer cada persona (por ejemplo, usuario o administrador). |
 | **Servidor** | Computador en la nube que atiende las peticiones de la aplicación. |
 | **Sesión** | El tiempo en que la aplicación te reconoce después de iniciar sesión, sin pedirte la contraseña de nuevo. |
 | **Tema claro / oscuro** | Combinación de colores de la interfaz; puedes elegir la clara o la oscura. |
@@ -118,7 +117,28 @@ cuenta) eliges cómo recibirlo:
 
 Confirma el método escribiendo el primer código. Desde **Seguridad** (menú superior) puedes
 **agregar el método que no elegiste** y escoger cuál se pide **por defecto**; tener los dos te
-permite entrar aunque no tengas el teléfono a mano.
+permite entrar aunque no tengas el teléfono a mano. En la app autenticadora la cuenta aparece
+como **Coordinador de reuniones**.
+
+![Pantalla del código de verificación con el enlace Perdí mi autenticador](img/manual/06-verificacion.png)
+
+| # | Elemento | Qué hacer |
+|:-:|---|---|
+| 1 | Código de 6 dígitos | El código que muestra tu app (o el que te llegó al correo) |
+| 2 | Verificar | Comprueba el código y abre **Mis reuniones** |
+| 3 | Perdí mi autenticador | Siempre visible. Úsalo si perdiste o cambiaste el teléfono |
+
+### 4.2.2 Perdí mi autenticador
+
+1. En la pantalla del código pulsa **Perdí mi autenticador**. Te llega un código de 6 dígitos al
+   correo de tu cuenta, **aunque no tengas activo el código por correo**. Vence pronto y solo
+   puedes pedir unos pocos seguidos.
+2. Escríbelo y pulsa **Verificar**. Varios códigos errados seguidos bloquean el ingreso por un
+   tiempo, igual que con la app.
+3. Aparece un QR: escanéalo con tu **app autenticadora nueva** (o escribe la clave que aparece
+   debajo) y escribe el primer código que muestre. Pulsa **Activar**.
+4. Recién ahí entras. La app anterior deja de servir; hasta que actives la nueva, la cuenta no
+   cambia y no se abre sesión.
 
 ### 4.3 Mi agenda
 
@@ -176,10 +196,20 @@ sugerencias o **cancelar** la reunión.
 
 ### 4.5.1 Olvidé mi contraseña
 
-En la pantalla de ingreso, pulsa **¿Olvidaste tu contraseña?** y escribe tu correo. Si la cuenta existe y
-está activa, te llega un correo con un enlace para crear una contraseña nueva (mínimo 10 caracteres).
-El enlace vence en 30 minutos y sirve una sola vez: deja de funcionar en cuanto la contraseña cambia.
-Por seguridad, la pantalla muestra el mismo mensaje exista o no la cuenta.
+![Pantalla para pedir el enlace de recuperación](img/manual/07-recuperar.png)
+
+| # | Elemento | Qué hacer |
+|:-:|---|---|
+| 1 | Correo | Solo el correo de tu cuenta |
+| 2 | Enviar enlace | Pide el enlace. Por seguridad, el mensaje es el mismo exista o no la cuenta |
+
+1. En la pantalla de ingreso, pulsa **¿Olvidaste tu contraseña?** y escribe tu correo.
+2. Si la cuenta existe y está activa, te llega un correo de **Coordinador de reuniones** con un
+   enlace. Vence pronto y sirve una sola vez: deja de funcionar en cuanto la contraseña cambia.
+3. En el enlace escribe la **Nueva contraseña** (mínimo 10 caracteres) y su confirmación, y pulsa
+   **Guardar contraseña**.
+4. Al guardarla se **cierran todas las sesiones abiertas** de tu cuenta (en cualquier equipo). Tu
+   verificación en dos pasos sigue activa: al volver a entrar se pide el código como siempre.
 
 ### 4.6 Preguntas frecuentes
 
@@ -204,10 +234,10 @@ Tu confianza es lo primero: la plataforma solo pide los datos necesarios para fu
 | Dato | Para qué se usa | Dónde se guarda | Quién lo ve |
 |---|---|---|---|
 | Nombre | Que te puedan invitar | MySQL HeatWave en Oracle Cloud | Todas las cuentas activas |
-| Correo | Iniciar sesión y recibir invitaciones | MySQL HeatWave | **Solo tú y el administrador** |
+| Correo | Iniciar sesión y recibir invitaciones | MySQL HeatWave | **Solo tú** |
 | Contraseña | Iniciar sesión | MySQL HeatWave, **solo su huella** | Nadie: no se puede leer ni recuperar |
-| Horario laboral y bloques | Calcular huecos libres | MySQL HeatWave | Tú y el administrador; el motor los usa sin mostrarlos a otros |
-| Reuniones | Coordinar | MySQL HeatWave | El organizador, los participantes y el administrador |
+| Horario laboral y bloques | Calcular huecos libres | MySQL HeatWave | Solo tú; el motor los usa sin mostrarlos a otros |
+| Reuniones | Coordinar | MySQL HeatWave | El organizador y los participantes |
 | Verificación en dos pasos | Confirmar que eres tú al ingresar | MySQL HeatWave: clave de la app **cifrada** y código del correo **solo como huella** | Nadie: no se puede leer desde la base |
 | Sesión | Mantenerte conectado | `localStorage` de tu navegador | Solo tu navegador; vence sola |
 
@@ -222,17 +252,17 @@ Comprobado en el código del proyecto (`functions/api/auth.py`, `functions/api/m
 - **Verificación en dos pasos obligatoria** con app autenticadora (TOTP) o código por correo:
   la clave de la app se guarda cifrada, un código no se acepta dos veces, los intentos errados
   bloquean temporalmente y el código del correo vence en pocos minutos.
-- **Tu agenda es tuya:** solo tú (o el administrador) puedes ver o cambiar tu horario y tus bloques.
-- **Reuniones privadas:** solo el organizador, los participantes y el administrador ven una
-  reunión; solo el organizador puede confirmarla, recalcularla o cancelarla.
+- **Tu agenda es tuya:** solo tú puedes ver o cambiar tu horario y tus bloques.
+- **Reuniones privadas:** solo el organizador y los participantes ven una reunión; solo el organizador puede confirmarla, recalcularla o cancelarla.
 - **Correos ocultos:** las demás cuentas ven tu nombre, nunca tu correo.
-- **Roles en el servidor:** crear, editar o borrar cuentas desde la administración es exclusivo
-  del rol admin.
 - **Conexión cifrada a la base** (TLS siempre activo) y consultas parametrizadas, sin concatenar
   texto del usuario en el SQL.
 - **CORS restringido** a la web oficial y secretos (base, clave de firma, SMTP) en variables de
   entorno, nunca en el repositorio.
 - **Bloqueo temporal** ante intentos fallidos repetidos de contraseña o de código.
+- **Recuperación sin atajos:** el enlace de "Olvidé mi contraseña" es de un solo uso y vence; al
+  usarlo se cierran todas las sesiones y la verificación en dos pasos se mantiene. "Perdí mi
+  autenticador" no abre sesión hasta configurar una app autenticadora nueva.
 - **Registro de eventos de seguridad:** ingresos, intentos fallidos, bloqueos y cambios de
   contraseña quedan registrados (nunca contraseñas ni códigos) y se depuran solos.
 - **Al día en seguridad:** el runtime, el sistema y las dependencias se mantienen con los últimos
