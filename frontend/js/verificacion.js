@@ -1,6 +1,8 @@
 "use strict";
 /* Segundo paso del ingreso (obligatorio): primera vez se elige el método; después se pide su código.
-   El "pase" del login vive en sessionStorage y vence a los 10 minutos en el servidor. */
+   El "pase" del login vive en sessionStorage y vence a los 10 minutos en el servidor.
+   "Perdí mi autenticador": código al correo de la cuenta (aunque el método correo no esté activo)
+   → QR de una app autenticadora nueva → al activarla, recién entra. */
 (function () {
     const paso = mfa.leer();
     if (!paso) { irA("login.html"); return; }
@@ -36,7 +38,49 @@
         if (otro) enlaces.push(`<a href="#" data-accion="cambiar">Usar ${NOMBRES[otro]}</a>`);
         $("otros").innerHTML = enlaces.join(" · ");
         $("otros").hidden = enlaces.length === 0;
+        $("perdi").hidden = false;
     }
+
+    function nuevoPase(r) {
+        if (r && r.pase) {
+            paso.pase = r.pase;
+            mfa.guardar(paso);
+        }
+    }
+
+    async function pedirRecuperacion() {
+        try {
+            const r = await api("/auth/mfa/recuperar", { method: "POST", body: JSON.stringify({ pase: paso.pase }) });
+            nuevoPase(r);
+            modo = "recuperar";
+            $("elegir").hidden = true;
+            $("qr").hidden = true;
+            $("perdi").hidden = true;
+            $("boton-codigo").textContent = "Verificar";
+            pedirCodigo(`Te enviamos un código de 6 dígitos a ${paso.email}. Vence en 15 minutos. Después configurarás tu app autenticadora nueva.`);
+            $("otros").innerHTML = '<a href="#" data-accion="perdi-reenviar">Enviar otro código</a> · <a href="verificacion.html">Volver</a>';
+            $("otros").hidden = false;
+            aviso(avisoEl, r.detail, "ok");
+        } catch (err) { aviso(avisoEl, err.message); }
+    }
+
+    function pintarReponer(r) {
+        modo = "reponer";
+        $("qr-imagen").innerHTML = r.qr;  // SVG generado por el servidor
+        $("qr-clave").textContent = r.secreto;
+        $("qr").hidden = false;
+        $("otros").hidden = true;
+        $("perdi").hidden = true;
+        $("boton-codigo").disabled = false;
+        $("boton-codigo").textContent = "Activar";
+        avisoEl.hidden = true;
+        pedirCodigo("Configura tu app autenticadora nueva: la anterior deja de servir al activarla.");
+    }
+
+    $("enlace-perdi").addEventListener("click", (e) => {
+        e.preventDefault();
+        pedirRecuperacion();
+    });
 
     async function reenviar() {
         try {
@@ -50,6 +94,7 @@
         if (!accion) return;
         e.preventDefault();
         if (accion === "reenviar") return reenviar();
+        if (accion === "perdi-reenviar") return pedirRecuperacion();
         metodo = (paso.activos || []).find((m) => m !== metodo);
         pintarVerificar();
         if (metodo === "correo") reenviar();
@@ -81,11 +126,20 @@
         e.preventDefault();
         const boton = $("boton-codigo");
         boton.disabled = true;
+        const codigo = $("codigo").value.replace(/\D/g, "");
         try {
+            if (modo === "recuperar") {
+                const r = await api("/auth/mfa/recuperar/verificar", { method: "POST", body: JSON.stringify({ pase: paso.pase, codigo }) });
+                nuevoPase(r);
+                return pintarReponer(r);
+            }
+            if (modo === "reponer") {
+                return terminar(await api("/auth/mfa/recuperar/activar", { method: "POST", body: JSON.stringify({ pase: paso.pase, codigo }) }));
+            }
             const ruta = modo === "activar" ? "/auth/mfa/activar" : "/auth/mfa/verificar";
             const s = await api(ruta, {
                 method: "POST",
-                body: JSON.stringify({ pase: paso.pase, metodo, codigo: $("codigo").value.replace(/\D/g, "") }),
+                body: JSON.stringify({ pase: paso.pase, metodo, codigo }),
             });
             terminar(s);
         } catch (err) {

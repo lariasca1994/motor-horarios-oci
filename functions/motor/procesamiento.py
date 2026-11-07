@@ -11,7 +11,7 @@ import os
 from db import conexion
 from motor import calcular_huecos
 from notificaciones import enviar_correos, enviar_telegram
-from plantilla_correo import html_sugerencias, telegram_sugerencias, texto_sugerencias
+from plantilla_correo import NOMBRE, html_sugerencias, telegram_sugerencias, texto_sugerencias
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ def procesar_reunion(reunion_id: int) -> dict:
         enlace = _enlace_reuniones()
         enviados = enviar_correos(
             personas,
-            asunto=f"Horarios sugeridos · {reunion['titulo']}",
+            asunto=f"Horarios sugeridos · {reunion['titulo']} · {NOMBRE}",
             cuerpo=lambda nombre: (
                 texto_sugerencias(nombre, reunion, nombres, huecos, enlace),
                 html_sugerencias(nombre, reunion, nombres, huecos, enlace),

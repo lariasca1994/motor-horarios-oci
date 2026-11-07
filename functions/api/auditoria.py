@@ -20,6 +20,7 @@ CUENTA_BLOQUEADA = "cuenta_bloqueada"
 CLAVE_CAMBIADA = "clave_cambiada"
 RECUPERACION = "recuperacion_solicitada"
 METODO_ACTIVADO = "metodo_activado"
+AUTENTICADOR_PERDIDO = "autenticador_perdido"
 
 RETENCION_DIAS = 15
 _MAX_EVENTOS = 50

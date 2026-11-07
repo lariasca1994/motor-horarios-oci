@@ -62,12 +62,32 @@ def verificar_clave(clave: str, guardado: str | None) -> bool:
 # ---------------------------------------------------------------- tokens
 
 def crear_token(usuario_id: int) -> str:
-    cuerpo = _b64e(json.dumps({"sub": usuario_id, "exp": int(time.time()) + _TTL}).encode())
+    # "iat" (con decimales): permite cerrar todas las sesiones abiertas antes de un momento
+    # (al restablecer la contraseña) sin guardar las sesiones en la base.
+    ahora = time.time()
+    cuerpo = _b64e(json.dumps({"sub": usuario_id, "exp": int(ahora) + _TTL, "iat": ahora}).encode())
     firma = _b64e(hmac.new(_SECRETO.encode(), cuerpo.encode(), hashlib.sha256).digest())
     return f"{cuerpo}.{firma}"
 
 
 def leer_token(token: str) -> int | None:
+    leido = leer_sesion(token)
+    return leido[0] if leido else None
+
+
+def sesion_vigente(emitido: float, mfa_columna) -> bool:
+    """False si la sesión se abrió antes del último restablecimiento de contraseña."""
+    if isinstance(mfa_columna, (str, bytes)):
+        try:
+            mfa_columna = json.loads(mfa_columna)
+        except ValueError:
+            mfa_columna = {}
+    desde = (mfa_columna or {}).get("sesiones_desde", 0) or 0
+    return emitido >= desde
+
+
+def leer_sesion(token: str) -> tuple[int, float] | None:
+    """(usuario_id, momento de emisión) de un token de sesión válido; si no, None."""
     try:
         cuerpo, firma = token.split(".")
         esperada = _b64e(hmac.new(_SECRETO.encode(), cuerpo.encode(), hashlib.sha256).digest())
@@ -78,7 +98,9 @@ def leer_token(token: str) -> int | None:
         # pasos llevan "tipo" y no sirven para entrar.
         if "tipo" in datos:
             return None
-        return int(datos["sub"]) if datos["exp"] > time.time() else None
+        if datos["exp"] <= time.time():
+            return None
+        return int(datos["sub"]), float(datos.get("iat", 0))
     except (ValueError, KeyError, TypeError):
         return None
 
@@ -158,15 +180,19 @@ _bearer = HTTPBearer(auto_error=False)
 
 
 def usuario_actual(cred: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> dict:
-    usuario_id = leer_token(cred.credentials) if cred else None
-    if usuario_id is None:
-        raise HTTPException(status_code=401, detail="sesión inválida o vencida",
+    leido = leer_sesion(cred.credentials) if cred else None
+    vencida = HTTPException(status_code=401, detail="sesión inválida o vencida",
                             headers={"WWW-Authenticate": "Bearer"})
+    if leido is None:
+        raise vencida
+    usuario_id, emitido = leido
     with conexion() as conn, conn.cursor() as cur:
-        cur.execute("SELECT id, nombre, email, rol, activo FROM usuarios WHERE id = %s", (usuario_id,))
+        cur.execute("SELECT id, nombre, email, rol, activo, mfa FROM usuarios WHERE id = %s", (usuario_id,))
         u = cur.fetchone()
     if not u or not u["activo"]:
         raise HTTPException(status_code=401, detail="cuenta inexistente o desactivada")
+    if not sesion_vigente(emitido, u.pop("mfa", None)):
+        raise vencida  # se restableció la contraseña después de abrir esta sesión
     return u
 
 

@@ -59,12 +59,12 @@ def _copia_oculta(destinatarios) -> list:
 def _nombre_remitente(organizador: Optional[Destinatario], cuenta: str, por_defecto: str) -> str:
     """
     El correo sale siempre de la cuenta verificada (cuenta), pero se presenta con el
-    nombre de quien organizó la reunión: "Ana Pérez vía Motor de Horarios". Si el
+    nombre de quien organizó la reunión: "Ana Pérez vía Coordinador de reuniones". Si el
     organizador es la propia cuenta remitente (las pruebas de QA), queda el nombre normal.
     """
     if not organizador or organizador[1].strip().lower() == cuenta.strip().lower():
         return por_defecto
-    return f"{organizador[0]} vía Motor de Horarios"
+    return f"{organizador[0]} vía Coordinador de reuniones"
 
 
 def enviar_correos(destinatarios: Iterable[Destinatario], asunto: str, cuerpo: CuerpoPersonal,

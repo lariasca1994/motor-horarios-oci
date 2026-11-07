@@ -3,6 +3,7 @@ import os
 import threading
 import time
 from datetime import datetime, timezone
+from html import escape
 from typing import List
 
 import pymysql
@@ -18,7 +19,7 @@ from auth import (crear_pase_mfa, crear_token, crear_token_recuperacion, hash_cl
 from db import conexion, modo_bd
 from modelos import (
     CambioClave, Confirmacion, Disponibilidad, DisponibilidadIn, EstadoMfa, Login, MfaCodigo,
-    MfaMetodo, MfaPase, PasoMfa, Recuperar, Reglas, Restablecer, Reunion, ReunionIn, Sesion,
+    MfaMetodo, MfaPase, MfaPaseCodigo, PasoMfa, Recuperar, Reglas, Restablecer, Reunion, ReunionIn, Sesion,
     Sugerencia, Usuario, UsuarioCambios, UsuarioIn,
 )
 from motor_cliente import disparar_motor
@@ -186,6 +187,40 @@ def mfa_verificar(datos: MfaCodigo):
     return _sesion(u)
 
 
+# ------------------------------------------------ perdí mi autenticador
+
+@app.post("/auth/mfa/recuperar", status_code=202)
+def mfa_recuperar(datos: MfaPase):
+    """Envía un código al correo de la cuenta aunque el método correo no esté activo.
+    Devuelve un pase nuevo: el código dura más que el pase del login."""
+    u = _usuario_del_pase(datos.pase)
+    if mfa.bloqueado(u):
+        raise HTTPException(status_code=429, detail="demasiados intentos; espera unos minutos")
+    if not mfa.enviar_codigo(u, recuperacion=True):
+        raise HTTPException(status_code=429, detail="pediste varios códigos seguidos; espera unos minutos")
+    return {"detail": f"te enviamos un código a {u['email']}", "pase": crear_pase_mfa(u["id"])}
+
+
+@app.post("/auth/mfa/recuperar/verificar")
+def mfa_recuperar_verificar(datos: MfaPaseCodigo):
+    """Código correcto: no abre sesión; devuelve el QR de la app autenticadora nueva."""
+    u = _usuario_del_pase(datos.pase)
+    if not mfa.verificar_recuperacion(u, datos.codigo):
+        raise HTTPException(status_code=401, detail="el código no es correcto o ya venció")
+    return {**mfa.iniciar_totp(u), "pase": crear_pase_mfa(u["id"])}
+
+
+@app.post("/auth/mfa/recuperar/activar", response_model=Sesion)
+def mfa_recuperar_activar(datos: MfaPaseCodigo):
+    """Activa la app autenticadora nueva (reemplaza la perdida) y recién ahí abre sesión."""
+    u = _usuario_del_pase(datos.pase)
+    if not mfa.puede_reponer(u):
+        raise HTTPException(status_code=403, detail="primero verifica el código que te enviamos al correo")
+    if not mfa.activar_reposicion(u, datos.codigo):
+        raise HTTPException(status_code=400, detail="el código no es correcto o ya venció")
+    return _sesion(u)
+
+
 @app.get("/auth/mfa", response_model=EstadoMfa)
 def mfa_estado(sesion: dict = Depends(usuario_actual)):
     u = mfa.cargar(sesion["id"])
@@ -249,15 +284,17 @@ def _url_frontend() -> str:
 
 
 def _correo_recuperacion(nombre: str, enlace: str):
-    texto = (f"Hola {nombre},\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta "
-             f"en Motor de Horarios. Crea una nueva aquí (el enlace vence en 30 minutos y sirve una vez):\n\n"
-             f"{enlace}\n\nSi no fuiste tú, ignora este correo: tu contraseña no cambia.")
-    html = (f"<p>Hola {nombre},</p><p>Recibimos una solicitud para restablecer la contraseña de tu "
-            f"cuenta en <strong>Motor de Horarios</strong>.</p>"
+    texto = (f"{mfa.EMISOR}\n\nHola {nombre},\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta "
+             f"en {mfa.EMISOR}. Crea una nueva aquí (el enlace vence en 30 minutos y sirve una vez):\n\n"
+             f"{enlace}\n\nSi no fuiste tú, ignora este correo: tu contraseña no cambia.\n\n— {mfa.EMISOR}")
+    html = (f'<p style="font-weight:700;color:#00758F">{mfa.EMISOR}</p>'
+            f"<p>Hola {escape(nombre)},</p><p>Recibimos una solicitud para restablecer la contraseña de tu "
+            f"cuenta en <strong>{mfa.EMISOR}</strong>.</p>"
             f'<p><a href="{enlace}" style="background:#00758F;color:#fff;padding:10px 18px;'
             f'border-radius:6px;text-decoration:none">Crear contraseña nueva</a></p>'
             f"<p>El enlace vence en 30 minutos y sirve una sola vez. Si no fuiste tú, ignora este "
-            f"correo: tu contraseña no cambia.</p>")
+            f"correo: tu contraseña no cambia.</p>"
+            f'<p style="font-size:12px;color:#5a6072">— {mfa.EMISOR}</p>')
     return texto, html
 
 
@@ -285,7 +322,7 @@ def recuperar_cuenta(datos: Recuperar):
             auditoria.registrar(auditoria.RECUPERACION, cuenta)
         try:
             from notificaciones import enviar_correos
-            enviar_correos([(u["nombre"], u["email"])], "Restablece tu contraseña · Motor de Horarios",
+            enviar_correos([(u["nombre"], u["email"])], f"Restablece tu contraseña · {mfa.EMISOR}",
                            lambda nombre: _correo_recuperacion(nombre, enlace))
         except Exception:  # el correo no debe revelar nada distinto al cliente
             logging.exception("No se pudo enviar el correo de recuperación")
@@ -307,13 +344,14 @@ def restablecer_clave(datos: Restablecer):
         cur.execute("UPDATE usuarios SET password_hash = %s WHERE id = %s",
                     (hash_clave(datos.nueva), usuario_id))
         conn.commit()
-    _clave_restablecida(usuario_id)
+    # Cierra todas las sesiones abiertas; la verificación en dos pasos sigue igual.
+    _clave_restablecida(usuario_id, cerrar_sesiones=True)
 
 
-def _clave_restablecida(usuario_id: int) -> None:
+def _clave_restablecida(usuario_id: int, cerrar_sesiones: bool = False) -> None:
     cuenta = mfa.cargar(usuario_id)
     if cuenta:
-        mfa.clave_restablecida(cuenta)
+        mfa.clave_restablecida(cuenta, cerrar_sesiones=cerrar_sesiones)
 
 
 # ---------------------------------------------------------------- personas

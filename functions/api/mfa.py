@@ -10,6 +10,11 @@ Cada cuenta usa al menos uno de dos metodos y puede tener ambos:
     Solo se guarda su huella (HMAC) y admite 5 intentos; se pueden pedir
     hasta 3 envios cada 10 minutos. Tras 5 codigos de la app errados, la app
     queda bloqueada 15 minutos.
+  - "Perdí mi autenticador": codigo de 6 digitos al correo de la cuenta aunque el
+    metodo correo no este activo. Vence en 15 minutos, tiene su propio limite de
+    envios y comparte el bloqueo de la app (5 errados -> 15 minutos). Acertarlo no
+    abre sesion: solo permite configurar una app autenticadora nueva (QR), y la
+    sesion llega al activarla.
 
 Todo vive en la columna JSON "mfa" de la tabla usuarios (MySQL); el usuario se
 maneja como diccionario con id, email y mfa.
@@ -35,15 +40,19 @@ from auth import secreto_mfa
 import auditoria
 from db import conexion
 
-EMISOR = "Motor de Horarios"
+# Nombre visible (correos y emisor del QR). Cambiarlo no invalida las apps ya configuradas:
+# los codigos dependen solo del secreto. La etiqueta interna de la clave (HKDF) NO cambia.
+EMISOR = "Coordinador de reuniones"
+_ETIQUETA_CLAVE = b"MotorHorarios.MFA.v1"
 METODOS = {"totp": "App autenticadora", "correo": "Código por correo"}
 _PASO = 30
 _CODIGO_MINUTOS = 10
 _MAX_INTENTOS = 5
 _MAX_ENVIOS = 3
 _BLOQUEO_SEG = 15 * 60  # tras 5 códigos de la app errados
+_RECUPERAR_MINUTOS = 15  # código de "Perdí mi autenticador"
 
-_clave = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b"MotorHorarios.MFA.v1").derive(
+_clave = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=_ETIQUETA_CLAVE).derive(
     secreto_mfa()
 )
 
@@ -158,49 +167,66 @@ def _activar_totp(usuario, codigo: str) -> bool:
 # ──────────────────────────── codigo por correo ───────────────────────────
 
 
-def enviar_codigo(usuario) -> bool:
-    """Envia un codigo nuevo. False si ya se pidieron demasiados."""
+def _correo_codigo(codigo: str, minutos: int, recuperacion: bool):
+    if recuperacion:
+        motivo = "Pediste recuperar el acceso porque perdiste tu app autenticadora. Tu código es:"
+        cierre = ("Al usarlo tendrás que configurar una app autenticadora nueva. Si no fuiste tú, "
+                  "cambia tu contraseña.")
+    else:
+        motivo = f"Tu código de verificación de {EMISOR} es:"
+        cierre = "Si no intentaste ingresar, cambia tu contraseña."
+    vence = f"Vence en {minutos} minutos y sirve una sola vez."
+
+    def contenido(nombre: str):
+        texto = (f"{EMISOR}\n\nHola {nombre},\n\n{motivo} {codigo}\n\n{vence} {cierre}\n\n"
+                 f"— {EMISOR}")
+        cuerpo = (f'<p style="font-weight:700;color:#00758F">{EMISOR}</p>'
+                  f"<p>Hola {html.escape(nombre)},</p><p>{motivo}</p>"
+                  f'<p style="font-size:28px;font-weight:700;letter-spacing:6px">{codigo}</p>'
+                  f"<p>{vence} {cierre}</p>"
+                  f'<p style="font-size:12px;color:#5a6072">— {EMISOR}</p>')
+        return texto, cuerpo
+    return contenido
+
+
+def enviar_codigo(usuario, recuperacion: bool = False) -> bool:
+    """Envia un codigo nuevo. False si ya se pidieron demasiados.
+    recuperacion=True: codigo de "Perdí mi autenticador" (no exige el metodo correo)."""
     ahora = time.time()
-    envios = [t for t in estado(usuario).get("envios", []) if ahora - t < _CODIGO_MINUTOS * 60]
+    minutos = _RECUPERAR_MINUTOS if recuperacion else _CODIGO_MINUTOS
+    campo, campo_envios = ("codigo_recuperar", "envios_recuperar") if recuperacion else ("codigo", "envios")
+    envios = [t for t in estado(usuario).get(campo_envios, []) if ahora - t < minutos * 60]
     if len(envios) >= _MAX_ENVIOS:
         return False
     codigo = f"{secrets.randbelow(1_000_000):06d}"
     _guardar(usuario, {
-        "codigo": {
+        campo: {
             "huella": _huella(codigo),
-            "expira": ahora + _CODIGO_MINUTOS * 60,
+            "expira": ahora + minutos * 60,
             "intentos": 0,
         },
-        "envios": envios + [ahora],
+        campo_envios: envios + [ahora],
     })
-    def contenido(nombre: str):
-        texto = (f"Hola {nombre},\n\nTu código de verificación de {EMISOR} es: {codigo}\n\n"
-                 f"Vence en {_CODIGO_MINUTOS} minutos y sirve una sola vez. Si no intentaste ingresar, "
-                 "cambia tu contraseña.")
-        cuerpo = (f"<p>Hola {html.escape(nombre)},</p><p>Tu código de verificación de <strong>{EMISOR}</strong> es:</p>"
-                  f'<p style="font-size:28px;font-weight:700;letter-spacing:6px">{codigo}</p>'
-                  f"<p>Vence en {_CODIGO_MINUTOS} minutos y sirve una sola vez. Si no intentaste ingresar, "
-                  "cambia tu contraseña.</p>")
-        return texto, cuerpo
-
+    asunto = f"Recupera tu acceso · {EMISOR}" if recuperacion else f"Tu código de acceso · {EMISOR}"
     try:
         from notificaciones import enviar_correos
-        enviar_correos([(usuario.get("nombre") or "", usuario["email"])], f"Tu código de acceso · {EMISOR}", contenido)
+        enviar_correos([(usuario.get("nombre") or "", usuario["email"])], asunto,
+                       _correo_codigo(codigo, minutos, recuperacion))
     except Exception:  # el cliente recibe la misma respuesta; el error queda en el log
         logging.exception("No se pudo enviar el código de verificación")
     return True
 
 
-def _verificar_correo(usuario, codigo: str) -> bool:
-    guardado = estado(usuario).get("codigo")
+def _verificar_correo(usuario, codigo: str, campo: str = "codigo") -> bool:
+    guardado = estado(usuario).get(campo)
     if not guardado or guardado.get("intentos", 0) >= _MAX_INTENTOS:
         return False
     if guardado["expira"] < time.time():
         return False
     if not hmac.compare_digest(guardado["huella"], _huella(codigo)):
-        _guardar(usuario, {"codigo": {**guardado, "intentos": guardado.get("intentos", 0) + 1}})
+        _guardar(usuario, {campo: {**guardado, "intentos": guardado.get("intentos", 0) + 1}})
         return False
-    _guardar(usuario, {"codigo": None})
+    _guardar(usuario, {campo: None})
     return True
 
 
@@ -224,17 +250,59 @@ def _verificar_metodo(usuario, metodo: str, codigo: str) -> bool:
         return False
     if metodo == "totp":
         # Sin este freno, con la contraseña bastaría probar códigos hasta acertar.
-        if estado(usuario).get("bloqueo_hasta", 0) > time.time():
+        if bloqueado(usuario):
             return False
         if _verificar_totp(usuario, estado(usuario).get("totp"), codigo):
             if estado(usuario).get("fallos"):
                 _guardar(usuario, {"fallos": 0})
             return True
-        fallos = estado(usuario).get("fallos", 0) + 1
-        _guardar(usuario, {"fallos": 0, "bloqueo_hasta": time.time() + _BLOQUEO_SEG}
-                 if fallos >= _MAX_INTENTOS else {"fallos": fallos})
+        _sumar_fallo(usuario)
         return False
     return _verificar_correo(usuario, codigo)
+
+
+def bloqueado(usuario) -> bool:
+    """True mientras dura el bloqueo por 5 códigos errados (app o recuperación)."""
+    return estado(usuario).get("bloqueo_hasta", 0) > time.time()
+
+
+def _sumar_fallo(usuario) -> None:
+    fallos = estado(usuario).get("fallos", 0) + 1
+    _guardar(usuario, {"fallos": 0, "bloqueo_hasta": time.time() + _BLOQUEO_SEG}
+             if fallos >= _MAX_INTENTOS else {"fallos": fallos})
+
+
+# ─────────────────────────── perdí mi autenticador ───────────────────────────
+
+
+def _verificar_recuperacion(usuario, codigo: str) -> bool:
+    """Código de "Perdí mi autenticador". Si acierta, deja un permiso temporal para
+    configurar una app nueva; no abre sesión."""
+    if bloqueado(usuario):
+        return False
+    if _verificar_correo(usuario, _limpiar(codigo), "codigo_recuperar"):
+        _guardar(usuario, {"fallos": 0, "reponer_hasta": time.time() + _RECUPERAR_MINUTOS * 60})
+        return True
+    _sumar_fallo(usuario)
+    return False
+
+
+def puede_reponer(usuario) -> bool:
+    return estado(usuario).get("reponer_hasta", 0) > time.time()
+
+
+def _activar_reposicion(usuario, codigo: str) -> bool:
+    """Reemplaza la app autenticadora por la nueva (la del QR recién escaneado)."""
+    if not puede_reponer(usuario):
+        return False
+    pendiente = estado(usuario).get("totp_pendiente")
+    if not _verificar_totp(usuario, pendiente, _limpiar(codigo)):
+        return False
+    cambios = {"totp": pendiente, "totp_pendiente": None, "reponer_hasta": 0}
+    if not configurado(usuario):
+        cambios["preferido"] = "totp"
+    _guardar(usuario, cambios)
+    return True
 
 
 def elegir_preferido(usuario, metodo: str) -> bool:
@@ -267,6 +335,22 @@ def activar_totp(usuario, codigo: str) -> bool:
     return True
 
 
+def verificar_recuperacion(usuario, codigo: str) -> bool:
+    if _verificar_recuperacion(usuario, codigo):
+        auditoria.registrar(auditoria.AUTENTICADOR_PERDIDO, usuario)
+        return True
+    auditoria.registrar(auditoria.CODIGO_ERRADO, usuario)
+    return False
+
+
+def activar_reposicion(usuario, codigo: str) -> bool:
+    if not _activar_reposicion(usuario, codigo):
+        return False
+    auditoria.registrar(auditoria.METODO_ACTIVADO, usuario)
+    auditoria.registrar(auditoria.INGRESO, usuario)
+    return True
+
+
 def activar_correo(usuario, codigo: str) -> bool:
     if not _activar_correo(usuario, codigo):
         return False
@@ -296,7 +380,12 @@ def clave_correcta(usuario) -> None:
         _guardar(usuario, {"fallos_clave": 0})
 
 
-def clave_restablecida(usuario) -> None:
-    """Contraseña nueva (recuperación o cambio): se levanta el bloqueo y queda en la auditoría."""
-    _guardar(usuario, {"fallos_clave": 0, "bloqueo_clave_hasta": 0})
+def clave_restablecida(usuario, cerrar_sesiones: bool = False) -> None:
+    """Contraseña nueva (recuperación o cambio): se levanta el bloqueo y queda en la auditoría.
+    cerrar_sesiones=True (recuperación): toda sesión abierta antes de este momento deja de
+    servir. La verificación en dos pasos no se toca: sigue activa con los mismos métodos."""
+    cambios = {"fallos_clave": 0, "bloqueo_clave_hasta": 0}
+    if cerrar_sesiones:
+        cambios["sesiones_desde"] = time.time()
+    _guardar(usuario, cambios)
     auditoria.registrar(auditoria.CLAVE_CAMBIADA, usuario)

@@ -23,7 +23,8 @@
                 body: JSON.stringify({ token, nueva: datos.get("nueva") }),
             });
             form.hidden = true;
-            aviso(avisoEl, "Tu contraseña quedó actualizada. Ya puedes ingresar.", "ok");
+            sesion.cerrar();  // el servidor ya cerró todas las sesiones abiertas de la cuenta
+            aviso(avisoEl, "Tu contraseña quedó actualizada y cerramos las sesiones abiertas. Ingresa con la nueva; la verificación en dos pasos sigue igual.", "ok");
         } catch (err) {
             aviso(avisoEl, err.message);
         }

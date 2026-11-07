@@ -62,6 +62,11 @@ class MfaCodigo(MfaMetodo):
     codigo: str = Field(min_length=6, max_length=8)
 
 
+class MfaPaseCodigo(MfaPase):
+    """"Perdí mi autenticador": pase del login y el código recibido (o el de la app nueva)."""
+    codigo: str = Field(min_length=6, max_length=8)
+
+
 class EstadoMfa(BaseModel):
     activos: List[str]
     preferido: Optional[str] = None

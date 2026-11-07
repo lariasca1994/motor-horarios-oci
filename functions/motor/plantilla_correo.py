@@ -9,6 +9,8 @@ from datetime import datetime
 from html import escape
 from typing import List, Optional
 
+# Nombre visible del portal en los correos (encabezado y pie).
+NOMBRE = "Coordinador de reuniones"
 ACENTO = "#00758f"
 ACENTO_SUAVE = "#dff0f4"
 FONDO = "#f5f6fa"
@@ -103,7 +105,7 @@ def html_sugerencias(nombre: str, reunion: dict, participantes: List[str], hueco
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:{SUPERFICIE};border:1px solid {BORDE};border-radius:10px;overflow:hidden;font-family:{FUENTE};color:{TEXTO};">
 <tr><td style="background:{ACENTO};padding:18px 28px;">
-  <div style="font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#cdeef5;">Motor de Horarios</div>
+  <div style="font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#cdeef5;">{NOMBRE}</div>
   <div style="font-size:15px;color:#ffffff;margin-top:2px;">Sugerencias de horario para tu reunión</div>
 </td></tr>
 <tr><td style="padding:24px 28px 6px;">
@@ -122,7 +124,7 @@ def html_sugerencias(nombre: str, reunion: dict, participantes: List[str], hueco
 </td></tr>
 {boton}
 <tr><td style="padding:20px 28px 22px;border-top:1px solid {BORDE};font-size:12px;line-height:1.5;color:{TEXTO_SUAVE};">
-  Aviso automático del Motor de Horarios. Cada participante recibe su propio correo; nadie ve la dirección de los demás.
+  Aviso automático de {NOMBRE}. Cada participante recibe su propio correo; nadie ve la dirección de los demás.
 </td></tr>
 </table>
 </td></tr></table>
@@ -152,7 +154,7 @@ def telegram_sugerencias(reunion: dict, organizador: Optional[tuple], participan
                          huecos: List[dict]) -> str:
     """Mismo contenido para Telegram (solo negrita, cursiva y enlaces; máx. 4.096 caracteres)."""
     lineas = [
-        "🗓️ <b>Horarios sugeridos</b> · Motor de Horarios",
+        f"🗓️ <b>Horarios sugeridos</b> · {NOMBRE}",
         f"<b>{escape(reunion['titulo'])}</b>",
         "",
         f"<b>Organiza:</b> {escape(organizador[0]) if organizador else '—'}",

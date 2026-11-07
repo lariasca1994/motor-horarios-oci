@@ -57,7 +57,12 @@ viernes. Cada persona ve las reuniones que organiza o en las que participa y ges
 propia agenda. Contraseñas protegidas con hash; verificación en dos pasos obligatoria (app
 autenticadora o código por correo, a elección); bloqueo temporal ante intentos fallidos
 repetidos; registro de eventos de seguridad (ingresos, intentos fallidos, bloqueos y cambios de
-contraseña); sesión con token firmado que vence sola.
+contraseña); sesión con token firmado que vence sola. Recuperación de acceso: **¿Olvidaste tu
+contraseña?** (enlace de un solo uso que vence; al cambiarla se cierran todas las sesiones
+abiertas y la verificación en dos pasos sigue activa) y **Perdí mi autenticador** (código al
+correo de la cuenta aunque el método correo no esté activo; obliga a configurar una app
+autenticadora nueva antes de entrar). Los correos y la app autenticadora muestran el nombre
+**Coordinador de reuniones**.
 
 Las cuentas iniciales de la demo se cargan desde un archivo privado (no versionado) con
 `local/crear_usuarios.py`, sin sobrescribir contraseñas ya cambiadas. Cada participante
@@ -171,8 +176,14 @@ La arquitectura con OCI Functions + API Gateway (`functions/*/func.py`, `Dockerf
 2. Escribe el código de 6 dígitos de tu app o de tu correo y pulsa **Verificar**. En
    **Seguridad** puedes agregar el otro método y elegir cuál se pide por defecto.
 3. La sesión vence sola.
-4. ¿La olvidaste? Pulsa **¿Olvidaste tu contraseña?** y escribe tu correo: si la cuenta existe,
-   llega un enlace (API de Brevo) que vence en 30 minutos y sirve una sola vez.
+4. ¿La olvidaste? Pulsa **¿Olvidaste tu contraseña?** y escribe solo tu correo: la respuesta es
+   la misma exista o no la cuenta y, si existe, llega un enlace (API de Brevo) que vence y sirve
+   una sola vez. En el enlace escribe la **Nueva contraseña** y su confirmación. Al guardarla se
+   cierran todas las sesiones abiertas de la cuenta; la verificación en dos pasos sigue igual.
+5. ¿Perdiste tu app autenticadora? En la pantalla del código pulsa **Perdí mi autenticador**:
+   llega un código de 6 dígitos al correo de la cuenta (aunque no tengas activo el código por
+   correo). Al verificarlo debes escanear el QR de tu app autenticadora nueva y escribir su
+   primer código; recién entonces entras, y la app perdida deja de servir.
 
 ### 5.3 Llenar tu agenda
 
@@ -245,6 +256,14 @@ powershell -ExecutionPolicy Bypass -File local\iniciar.ps1
 
 Para recrear la base: `.venv\Scripts\python local\crear_bd.py --reset`.
 `docker-compose.yml` queda como alternativa para equipos con Docker.
+
+Pruebas unitarias de la API (sin base de datos ni correos reales; también corren en GitHub
+Actions con cada push, flujo `Pruebas`):
+
+```powershell
+.venv\Scripts\pip install pytest
+.venv\Scripts\python -m pytest -q tests
+```
 
 ### Variables de entorno
 
