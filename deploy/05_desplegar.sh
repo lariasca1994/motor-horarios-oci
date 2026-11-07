@@ -47,7 +47,7 @@ import json, sys
 kv = dict(l.split('=', 1) for l in sys.stdin.read().splitlines() if '=' in l and not l.startswith('#'))
 print(json.dumps({'host': kv['SMTP_HOST'], 'port': int(kv.get('SMTP_PORT', 587)), 'user': kv['SMTP_USER'],
                   'password': kv['SMTP_PASSWORD'], 'from': kv['EMAIL_FROM'],
-                  'from_name': kv.get('EMAIL_FROM_NAME', 'Motor de Horarios')}))")
+                  'from_name': kv.get('EMAIL_FROM_NAME', 'Coordinador de reuniones')}))")
   SMTP_SECRET_ID=$(oci vault secret create-base64 -c "$COMPARTMENT" --vault-id "$VAULT_ID" --key-id "$VAULT_KEY_ID" \
       --secret-name motor-horarios-smtp --description "Credenciales SMTP (Brevo)" \
       --secret-content-content "$(printf '%s' "$JSON" | base64 -w0)" \

@@ -30,14 +30,14 @@ def _config_smtp() -> dict:
         s = leer_secreto(os.environ["SMTP_SECRET_OCID"])
         return {"host": s["host"], "port": int(s.get("port", 587)), "user": s["user"],
                 "password": s["password"], "from": s["from"],
-                "from_name": s.get("from_name", "Motor de Horarios")}
+                "from_name": s.get("from_name", "Coordinador de reuniones")}
     return {
         "host": os.environ["SMTP_HOST"],
         "port": int(os.environ.get("SMTP_PORT", "587")),
         "user": os.environ["SMTP_USER"],
         "password": os.environ["SMTP_PASSWORD"],
         "from": os.environ["EMAIL_FROM"],
-        "from_name": os.environ.get("EMAIL_FROM_NAME", "Motor de Horarios"),
+        "from_name": os.environ.get("EMAIL_FROM_NAME", "Coordinador de reuniones"),
     }
 
 
@@ -123,7 +123,7 @@ def _enviar_brevo_api(destinatarios, asunto: str, cuerpo: CuerpoPersonal,
     cuenta = os.environ["EMAIL_FROM"].strip()
     remitente = {"email": cuenta,
                  "name": _nombre_remitente(organizador, cuenta,
-                                           os.environ.get("EMAIL_FROM_NAME", "Motor de Horarios"))}
+                                           os.environ.get("EMAIL_FROM_NAME", "Coordinador de reuniones"))}
     copia = _copia_oculta(destinatarios)
     enviados = 0
     with httpx.Client(base_url="https://api.brevo.com/v3", timeout=20,

@@ -36,7 +36,7 @@ services:
       - key: EMAIL_FROM
         sync: false            # remitente verificado en Brevo
       - key: EMAIL_FROM_NAME
-        value: Motor de Horarios
+        value: Coordinador de reuniones
       - key: TELEGRAM_BOT_TOKEN
         sync: false            # bot de avisos del portafolio
       - key: TELEGRAM_CHAT_ID
