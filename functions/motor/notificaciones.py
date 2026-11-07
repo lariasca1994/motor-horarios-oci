@@ -24,20 +24,33 @@ Destinatario = Tuple[str, str]  # (nombre, email)
 CuerpoPersonal = Callable[[str], Tuple[str, Optional[str]]]
 
 
+NOMBRE_VISIBLE = "Coordinador de reuniones"
+# Nombres anteriores que pueden seguir guardados en la configuración de la nube:
+# el remitente visible siempre es el nombre descriptivo del portal.
+_NOMBRES_ANTERIORES = {"motor de horarios", "motor-horarios-oci"}
+
+
+def _remitente_visible(configurado: Optional[str]) -> str:
+    valor = (configurado or "").strip()
+    if not valor or valor.lower() in _NOMBRES_ANTERIORES:
+        return NOMBRE_VISIBLE
+    return valor
+
+
 def _config_smtp() -> dict:
     if os.environ.get("SMTP_SECRET_OCID"):
         from vault import leer_secreto
         s = leer_secreto(os.environ["SMTP_SECRET_OCID"])
         return {"host": s["host"], "port": int(s.get("port", 587)), "user": s["user"],
                 "password": s["password"], "from": s["from"],
-                "from_name": s.get("from_name", "Coordinador de reuniones")}
+                "from_name": _remitente_visible(s.get("from_name"))}
     return {
         "host": os.environ["SMTP_HOST"],
         "port": int(os.environ.get("SMTP_PORT", "587")),
         "user": os.environ["SMTP_USER"],
         "password": os.environ["SMTP_PASSWORD"],
         "from": os.environ["EMAIL_FROM"],
-        "from_name": os.environ.get("EMAIL_FROM_NAME", "Coordinador de reuniones"),
+        "from_name": _remitente_visible(os.environ.get("EMAIL_FROM_NAME")),
     }
 
 
@@ -123,7 +136,7 @@ def _enviar_brevo_api(destinatarios, asunto: str, cuerpo: CuerpoPersonal,
     cuenta = os.environ["EMAIL_FROM"].strip()
     remitente = {"email": cuenta,
                  "name": _nombre_remitente(organizador, cuenta,
-                                           os.environ.get("EMAIL_FROM_NAME", "Coordinador de reuniones"))}
+                                           _remitente_visible(os.environ.get("EMAIL_FROM_NAME")))}
     copia = _copia_oculta(destinatarios)
     enviados = 0
     with httpx.Client(base_url="https://api.brevo.com/v3", timeout=20,
