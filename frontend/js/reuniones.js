@@ -77,10 +77,48 @@
             </article>`;
     }
 
+    /** Franja de indicadores con las reuniones ya cargadas (solo presentación). */
+    function pintarResumen(data) {
+        let caja = $("#resumen");
+        if (!caja) {
+            caja = document.createElement("dl");
+            caja.id = "resumen";
+            caja.className = "resumen-reuniones";
+            $("#lista").before(caja);
+        }
+        if (!data.length) { caja.hidden = true; return; }
+        caja.hidden = false;
+        const contar = (estado) => data.filter((r) => r.estado === estado).length;
+        const partes = [
+            ["con_sugerencias", contar("con_sugerencias")],
+            ["confirmada", contar("confirmada")],
+            ["sin_huecos", contar("sin_huecos")],
+        ];
+        const otras = data.length - partes.reduce((s, [, n]) => s + n, 0);
+        const celdas = [["Reuniones", data.length], ["Con sugerencias", partes[0][1]], ["Confirmadas", partes[1][1]], ["Sin huecos", partes[2][1]]];
+        caja.innerHTML = celdas.map(([nombre, n]) => `<div><dt>${nombre}</dt><dd data-valor="${n}">${n}</dd></div>`).join("")
+            + `<div class="resumen-barra" aria-hidden="true">${[...partes, ["otras", otras]].filter(([, n]) => n > 0)
+                .map(([clase, n]) => `<i class="${clase}" style="flex-grow:${n}"></i>`).join("")}</div>`;
+        // Las cifras cuentan desde cero al aparecer.
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            caja.querySelectorAll("dd").forEach((dd) => {
+                const destino = Number(dd.dataset.valor);
+                const inicio = performance.now();
+                const paso = (ahora) => {
+                    const avance = Math.min(1, (ahora - inicio) / 700);
+                    dd.textContent = String(Math.round(destino * (1 - (1 - avance) ** 3)));
+                    if (avance < 1) requestAnimationFrame(paso);
+                };
+                requestAnimationFrame(paso);
+            });
+        }
+    }
+
     async function cargarReuniones() {
         const lista = $("#lista");
         try {
             const data = await api("/reuniones");
+            pintarResumen(data);
             lista.innerHTML = data.length
                 ? data.map(tarjeta).join("")
                 : '<div class="tarjeta"><p class="vacio" style="margin:0">Todavía no hay reuniones. Propón la primera.</p></div>';
