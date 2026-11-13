@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#00758F">
+    <meta name="robots" content="noindex">
+    <title>Sin conexión — Coordinador de reuniones</title>
+    <link rel="icon" href="/iconos/icono.svg" type="image/svg+xml">
+    <!-- Página autónoma que guarda el service worker: no carga nada externo. Colores de estilos.css. -->
+    <style>
+        :root { color-scheme: light; --fondo: #f5f6fa; --superficie: #ffffff; --texto: #1f2430; --suave: #5a6072; --borde: #dde1ea; --acento: #00758f; --acento-suave: #dff0f4; --oro: #F9B233; }
+        @media (prefers-color-scheme: dark) { :root { color-scheme: dark; --fondo: #14161f; --superficie: #1d2130; --texto: #e9ebf3; --suave: #a3a9bd; --borde: #2c3145; --acento-suave: #123039; } }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--fondo); color: var(--texto); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; }
+        main { display: grid; justify-items: center; gap: 12px; width: 100%; max-width: 440px; animation: entrar .5s cubic-bezier(.2, .8, .2, 1) backwards; }
+        @keyframes entrar { from { opacity: 0; transform: translateY(10px); } }
+        .agenda { position: relative; width: 100%; max-width: 300px; padding: 12px; border: 1px solid var(--borde); border-radius: 14px; background: var(--superficie); }
+        .fila { display: grid; grid-template-columns: 44px repeat(5, 1fr); gap: 5px; margin-bottom: 5px; align-items: center; font-size: 11px; color: var(--suave); }
+        .fila:last-child { margin-bottom: 0; }
+        .fila i { height: 18px; border-radius: 5px; background: repeating-linear-gradient(135deg, var(--borde) 0 4px, transparent 4px 8px); opacity: .8; }
+        .agenda::after { content: ""; position: absolute; top: 30px; bottom: 12px; left: 56px; width: 3px; border-radius: 3px; background: var(--acento); box-shadow: 0 0 12px 2px var(--acento); animation: barrer 2.6s ease-in-out infinite alternate; }
+        @keyframes barrer { to { left: calc(100% - 15px); } }
+        .etiqueta { margin: 6px 0 0; color: var(--acento); font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+        h1 { margin: 0; font-size: 26px; }
+        p { margin: 0; color: var(--suave); }
+        .pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 18px; margin-top: 8px; }
+        .cuenta { display: flex; align-items: center; gap: 8px; color: var(--suave); font-size: 14px; }
+        .cuenta svg { width: 22px; height: 22px; transform: rotate(-90deg); }
+        .cuenta circle { fill: none; stroke-width: 3; }
+        .fondo { stroke: var(--borde); }
+        .valor { stroke: var(--acento); stroke-dasharray: 1; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+        button { min-height: 44px; padding: 0 20px; border: 0; border-radius: 8px; background: var(--acento); color: #fff; font: inherit; cursor: pointer; transition: transform .12s; }
+        button:active:not(:disabled) { transform: scale(.97); }
+        button:disabled { cursor: progress; opacity: .7; }
+        button:focus-visible { outline: 3px solid var(--acento-suave); outline-offset: 2px; }
+        @media (prefers-reduced-motion: reduce) { main, .agenda::after { animation: none; } .valor, button { transition: none; } }
+    </style>
+</head>
+<body>
+    <main role="status" aria-live="polite">
+        <div class="agenda" aria-hidden="true">
+            <div class="fila"><span></span><span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span></div>
+            <div class="fila"><span>Ana</span><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="fila"><span>Luis</span><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="fila"><span>Sofía</span><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <p class="etiqueta">SIN SEÑAL</p>
+        <h1>Sin conexión</h1>
+        <p>Sin internet no podemos leer las agendas ni proponer reuniones. Tus datos siguen guardados: la página vuelve sola cuando haya red.</p>
+        <div class="pie">
+            <span class="cuenta">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle class="fondo" cx="12" cy="12" r="9"/><circle id="valor" class="valor" cx="12" cy="12" r="9" pathLength="1"/></svg>
+                <span id="texto"></span>
+            </span>
+            <button type="button" id="reintentar">Reintentar ahora</button>
+        </div>
+    </main>
+    <script>
+        // Cada 8 s pregunta (HEAD, el service worker no lo intercepta) si el sitio responde.
+        (function () {
+            var TOTAL = 8, resto = TOTAL, revisando = false;
+            var valor = document.getElementById("valor"), texto = document.getElementById("texto"), boton = document.getElementById("reintentar");
+            function pintar() {
+                valor.style.strokeDashoffset = revisando ? 0 : 1 - resto / TOTAL;
+                texto.textContent = revisando ? "Comprobando…" : "Reintento automático en " + resto + " s";
+            }
+            function revisar() {
+                if (revisando) return;
+                revisando = true; boton.disabled = true; pintar();
+                fetch("/", { method: "HEAD", cache: "no-store" })
+                    .then(function (r) { if (r.ok) { location.reload(); return; } throw new Error("sin respuesta"); })
+                    .catch(function () { revisando = false; boton.disabled = false; resto = TOTAL; pintar(); });
+            }
+            boton.addEventListener("click", revisar);
+            window.addEventListener("online", revisar);
+            setInterval(function () { if (revisando) return; resto = resto > 0 ? resto - 1 : 0; if (resto === 0) revisar(); else pintar(); }, 1000);
+            pintar();
+        })();
+    </script>
+</body>
+</html>

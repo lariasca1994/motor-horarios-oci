@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#00758F">
+    <meta name="robots" content="noindex">
+    <title>Página no encontrada — Coordinador de reuniones</title>
+    <link rel="icon" href="/iconos/icono.svg" type="image/svg+xml">
+    <!-- Página autónoma (Vercel la sirve para direcciones que no existen). Colores de estilos.css. -->
+    <style>
+        :root { color-scheme: light; --fondo: #f5f6fa; --superficie: #ffffff; --texto: #1f2430; --suave: #5a6072; --borde: #dde1ea; --acento: #00758f; --acento-suave: #dff0f4; --rojo: #b3261e; --rojo-fondo: #fbe1e1; }
+        @media (prefers-color-scheme: dark) { :root { color-scheme: dark; --fondo: #14161f; --superficie: #1d2130; --texto: #e9ebf3; --suave: #a3a9bd; --borde: #2c3145; --acento-suave: #123039; --rojo: #f29a94; --rojo-fondo: #3a1a1a; } }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--fondo); color: var(--texto); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+        main { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 40px; align-items: center; width: 100%; max-width: 800px; animation: entrar .5s cubic-bezier(.2, .8, .2, 1) backwards; }
+        @keyframes entrar { from { opacity: 0; transform: translateY(10px); } }
+        .agenda { overflow: hidden; border: 1px solid var(--borde); border-radius: 14px; background: var(--superficie); box-shadow: 0 18px 44px -24px rgba(0, 0, 0, .35); }
+        .cabeza { display: flex; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--borde); color: var(--suave); font: 12px ui-monospace, Consolas, monospace; }
+        .cabeza b { color: var(--rojo); }
+        .rejilla { padding: 12px 14px; }
+        .fila { display: grid; grid-template-columns: 46px repeat(5, 1fr); gap: 5px; margin-bottom: 6px; align-items: center; font-size: 11px; color: var(--suave); }
+        .fila i { height: 20px; border-radius: 5px; background: var(--rojo-fondo); border: 1px solid color-mix(in srgb, var(--rojo) 30%, transparent); transform-origin: left; animation: llenar .45s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(.2s + var(--i) * 45ms); }
+        @keyframes llenar { from { transform: scaleX(0); opacity: 0; } }
+        .resultado { display: flex; justify-content: space-between; padding: 10px 14px; border-top: 1px dashed var(--borde); font-size: 13px; }
+        .resultado strong { color: var(--rojo); }
+        .eyebrow { margin: 0 0 10px; color: var(--acento); font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+        h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.2; }
+        p { margin: 0 0 18px; color: var(--suave); }
+        code { padding: 1px 6px; border-radius: 4px; background: var(--acento-suave); color: var(--texto); font: 13px ui-monospace, Consolas, monospace; overflow-wrap: anywhere; }
+        .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+        a.boton { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border: 1px solid transparent; border-radius: 8px; text-decoration: none; transition: transform .18s; }
+        a.boton:active { transform: scale(.97); }
+        .principal { background: var(--acento); color: #fff; }
+        a.secundario { border-color: var(--acento); color: var(--acento); }
+        @media (prefers-color-scheme: dark) { a.secundario { color: #5cc6de; border-color: #5cc6de; } }
+        a:focus-visible { outline: 3px solid var(--acento-suave); outline-offset: 2px; }
+        @media (max-width: 680px) { main { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+        @media (prefers-reduced-motion: reduce) { main, .fila i { animation: none; } }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="agenda" aria-hidden="true">
+            <div class="cabeza"><span id="ruta-cabeza">GET /</span><b>404</b></div>
+            <div class="rejilla" id="rejilla"></div>
+            <div class="resultado"><span>Mejor hueco: ninguno</span><strong>0 de 3 pueden</strong></div>
+        </div>
+        <div>
+            <p class="eyebrow">PÁGINA NO ENCONTRADA</p>
+            <h1>No hay hueco para esta página</h1>
+            <p>Buscamos <code id="ruta">esta dirección</code> en todas las agendas y no aparece. Si tenías la sesión abierta, sigue abierta.</p>
+            <div class="acciones">
+                <a class="boton principal" href="/reuniones">Ver reuniones</a>
+                <a class="boton secundario" href="/">Volver al inicio</a>
+            </div>
+        </div>
+    </main>
+    <script>
+        (function () {
+            var ruta = location.pathname || "/";
+            document.getElementById("ruta").textContent = ruta;
+            document.getElementById("ruta-cabeza").textContent = "GET " + ruta;
+            var filas = [["", "LUN", "MAR", "MIÉ", "JUE", "VIE"], ["Ana"], ["Luis"], ["Sofía"]];
+            var html = "", k = 0;
+            filas.forEach(function (f, i) {
+                html += '<div class="fila"><span>' + f[0] + "</span>";
+                for (var d = 1; d <= 5; d++) html += i === 0 ? "<span>" + f[d] + "</span>" : '<i style="--i:' + (k++) + '"></i>';
+                html += "</div>";
+            });
+            document.getElementById("rejilla").innerHTML = html;
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "Coordinador de reuniones",
+  "short_name": "Reuniones",
+  "description": "Coordina reuniones entre varias personas: cada una registra su agenda y el motor propone los mejores huecos comunes.",
+  "lang": "es",
+  "start_url": "/reuniones?origen=app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#14161f",
+  "theme_color": "#00758F",
+  "icons": [
+    { "src": "/iconos/icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/iconos/icono-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/iconos/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/iconos/icono.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Mis reuniones", "url": "/reuniones", "icons": [{ "src": "/iconos/icono-192.png", "sizes": "192x192" }] },
+    { "name": "Mi agenda", "url": "/agenda", "icons": [{ "src": "/iconos/icono-192.png", "sizes": "192x192" }] }
+  ]
+}
