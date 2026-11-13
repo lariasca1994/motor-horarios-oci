@@ -115,7 +115,11 @@ cuenta) eliges cómo recibirlo:
 | **App autenticadora** (recomendado) | Escaneas un código QR con Google Authenticator, Microsoft Authenticator u otra app; desde ese momento la app muestra un código nuevo cada 30 segundos, incluso sin internet. Si no puedes escanear, escribe la clave que aparece bajo el QR. |
 | **Código por correo** | Cada vez que ingresas te llega un código de 6 dígitos que vence en 10 minutos y sirve una sola vez. |
 
-Confirma el método escribiendo el primer código. Desde **Seguridad** (menú superior) puedes
+Cada dígito ocupa su propia casilla. Bajo las casillas, un círculo muestra cuándo tu app muestra un
+código nuevo (o cuánto le queda al código del correo). El candado de arriba se abre cuando el código
+es correcto; si no lo es, tiembla y el aviso explica qué pasó.
+
+Confirma el método escribiendo el primer código. Desde **Seguridad** (menú lateral) puedes
 **agregar el método que no elegiste** y escoger cuál se pide **por defecto**; tener los dos te
 permite entrar aunque no tengas el teléfono a mano. En la app autenticadora la cuenta aparece
 como **Coordinador de reuniones**.
@@ -213,6 +217,25 @@ sugerencias o **cancelar** la reunión.
 
 ### 4.6 Preguntas frecuentes
 
+**¿Cómo uso el menú?** En el computador, **Compactar menú** (abajo a la izquierda) deja solo los
+íconos y **Extender menú** lo vuelve a abrir; al pasar el ratón por un ícono aparece su nombre. La
+aplicación recuerda tu elección en ese equipo. En el teléfono el menú es una barra abajo: **Más**
+abre Contraseña, Seguridad y Salir.
+
+**¿Qué muestra la franja de Mis reuniones?** Cuántas reuniones hay en total, con sugerencias,
+confirmadas y sin huecos, y una barra con la proporción de cada estado.
+
+**¿Cómo instalo la app?** En Chrome o Edge (computador o Android) usa la opción **Instalar** del
+navegador (ícono en la barra de direcciones o menú → *Instalar Coordinador de reuniones*). En
+iPhone abre la página en Safari y elige **Compartir → Agregar a inicio**. La app instalada abre en
+su propia ventana y se actualiza sola.
+
+**¿Qué significa "Sin conexión"?** Tu equipo perdió internet. La pantalla lo comprueba cada 8
+segundos y vuelve sola cuando hay red; también puedes pulsar **Reintentar ahora**.
+
+**¿Qué significa "No hay hueco para esta página"?** La dirección escrita no existe. Usa **Ver
+reuniones** o **Volver al inicio**; si tenías la sesión abierta, sigue abierta.
+
 **¿Por qué el motor no encontró huecos?** No hay una franja de la duración pedida en la que todos
 estén dentro de su horario laboral y sin bloques ocupados. Amplía el rango de fechas o reduce la
 duración.
@@ -223,7 +246,7 @@ hace más atractiva cuando hay varias opciones.
 **¿Los participantes tienen que aceptar en la aplicación?** No. Reciben las sugerencias por correo
 y el organizador confirma el horario desde la aplicación.
 
-**¿Qué significa la pantalla "Estamos en mantenimiento"?** El servicio o su base de datos no están respondiendo en ese momento. No se perdió nada: tus reuniones y tu agenda siguen guardados, y ninguna acción quedó a medias (si no viste la confirmación, no se guardó). La pantalla se actualiza sola y vuelve a la normalidad apenas el servicio responda; también puedes reintentar más tarde.
+**¿Qué significa la pantalla "Estamos en mantenimiento"?** El servicio o su base de datos no están respondiendo en ese momento. No se perdió nada: tus reuniones y tu agenda siguen guardados (la pantalla muestra una cuenta regresiva y lo comprueba cada 15 segundos), y ninguna acción quedó a medias (si no viste la confirmación, no se guardó). La pantalla se actualiza sola y vuelve a la normalidad apenas el servicio responda; también puedes reintentar más tarde.
 
 ## 5. Seguridad: tu información protegida
 
