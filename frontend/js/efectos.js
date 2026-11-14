@@ -21,6 +21,8 @@
         try { return new URL(url, location.href).pathname.split("/").pop().replace(/\.html$/, ""); } catch (e) { return ""; }
     }
     window.addEventListener("pagereveal", function (e) {
+        // Si la otra página no participa, la transición se cancela: no es un error.
+        if (e.viewTransition) { e.viewTransition.ready.catch(function () {}); e.viewTransition.finished.catch(function () {}); }
         if (!e.viewTransition || !window.navigation || !navigation.activation || !navigation.activation.from) return;
         var desde = ORDEN[pagina(navigation.activation.from.url)];
         var hacia = ORDEN[pagina(location.href)];
