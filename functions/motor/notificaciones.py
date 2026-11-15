@@ -145,7 +145,7 @@ def _enviar_brevo_api(destinatarios, asunto: str, cuerpo: CuerpoPersonal,
             texto, html = cuerpo(nombre)
             mensaje = {
                 "sender": remitente,
-                "to": [{"email": email, "name": nombre}],
+                "to": [{"email": email, "name": nombre.strip()} if nombre and nombre.strip() else {"email": email}],
                 "subject": asunto,
                 "textContent": texto,
             }
