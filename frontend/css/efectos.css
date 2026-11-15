@@ -126,7 +126,8 @@ body.con-menu > .barra {
 }
 body.con-menu .marca-grupo { justify-content: space-between; padding: .25rem .35rem 1rem; }
 body.con-menu .marca { min-width: 0; font-size: 1rem; white-space: nowrap; }
-body.con-menu .marca-texto { overflow: hidden; text-overflow: ellipsis; transition: opacity .22s ease; }
+body.con-menu .marca-texto { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    white-space: normal; line-height: 1.2; transition: opacity .22s ease; }
 body.con-menu .nav-principal { position: relative; display: flex; flex: 1; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: .15rem; }
 .menu-op {
     position: relative;
